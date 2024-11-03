@@ -105,9 +105,6 @@ class MAIN:
                 self.game_over()
 
     def game_over(self):
-        #screen = pygame.display.set_mode((800, 600))
-        screen.blit(MAIN.backg_surface,(0,0))
-        screen.blit(MAIN.starting_surf,MAIN.starting_rect)
         pygame.quit()
         sys.exit()
 
@@ -119,11 +116,6 @@ pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 screen_input = pygame.USEREVENT
 pygame.time.set_timer(screen_input, 200)
-
-starting_surf=pygame.image.load("D:\دروس دانشگاه\ترم ۱  ۱۴۰۳\AP\snake_images\cute_snake.jpg")
-starting_rect=starting_surf.get_rect(topleft=(70,20))
-backg_surface=pygame.Surface((700,600))
-backg_surface.fill("antiquewhite")
 
 while True:
     # exit code
