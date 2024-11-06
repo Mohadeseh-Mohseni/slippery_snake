@@ -4,27 +4,44 @@ import pygame
 import random
 from sys import exit
 
-def is_safe(pose,body):
-    if pose[0] <= -40 or pose[0] >= 800 or pose[1] <= -40 or pose[1] >= 600 or pose in body :
+def is_safe(pose, body,path):
+     # Check if the position is out of bounds or collides with the snake's body
+    if pose[0] <= -40 or pose[0] >= 800 or pose[1] <=-40  or pose[1] >= 600:
+        return False
+    if pose in body:
+        return False
+    if pose in path:
         return False
     return True
-
 
 def shortest_path_util(head_pose,body,fruit_pose, path, cnt):
     if head_pose==fruit_pose:
         return True
-    directions=[(-40, 0),(40, 0),(0,-40),(0, 40)]
+    if fruit_pose[0] < head_pose[0] and fruit_pose[1] <= head_pose[1]:
+        directions=[(-40, 0),(0,-40),(40, 0),(0,40)]
+    elif fruit_pose[0] < head_pose[0] and fruit_pose[1] >= head_pose[1]:
+        directions=[(-40, 0),(0,40),(40, 0),(0,-40)]
+    elif fruit_pose[0] > head_pose[0] and fruit_pose[1] >= head_pose[1]:
+        directions=[(40, 0),(0,40),(-40, 0),(0,-40)]
+    elif fruit_pose[0] == head_pose[0] and fruit_pose[1] > head_pose[1]:
+        directions=[(0,40),(0,40),(-40, 0),(0,-40)]
+    elif fruit_pose[0] == head_pose[0] and fruit_pose[1] < head_pose[1]:
+        directions=[(0,-40),(0,40),(-40, 0),(0,40)]
+    else:
+        directions=[(40, 0),(0,-40),(-40, 0),(0,40)]
+
+
     for dir in directions:
         new_pose=(head_pose[0]+dir[0],head_pose[1]+dir[1])
         new_body=[new_pose]+body[:-1]
         tail=body[-1]
-        if is_safe(new_pose,new_body):
+        if is_safe(new_pose,new_body[1:],path):
             cnt+=1
             path.append(new_pose)
             body=new_body
             head_pose=new_pose
             if shortest_path_util(head_pose,body,fruit_pose, path, cnt):
-                return True
+                return path
             cnt-=1
             path=path[:-1]
             body=body[1:]+[tail]
@@ -46,7 +63,7 @@ def show_path(path):
     for sq in path:
         tile= pygame.Surface((40,40))
         tile.fill("chocolate1")
-        tile.set_alpha(128)
+        tile.set_alpha(65)
         screen.blit(tile, sq)
 
 
@@ -64,7 +81,7 @@ class Fruit:
         screen.blit(fruit, fruit_rect)
 class Snake:
     def __init__(self):
-        self.body = [pygame.math.Vector2(5, 10) * 40, pygame.math.Vector2(6, 10) * 40, pygame.math.Vector2(7, 10) * 40]
+        self.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
         self.direction = pygame.math.Vector2(-40, 0)
         self.color = (0, 153, 255)
         self.new_block = False
@@ -190,6 +207,7 @@ while True:
             if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
                 main_game.snake.direction = (-40, 0)
     screen.fill("antiquewhite")
+    
     grid()
     main_game.draw_elements()
     if main_game.snake.body:
