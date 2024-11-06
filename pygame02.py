@@ -4,19 +4,18 @@ import pygame
 import random
 from sys import exit
 
+   
+
+
 def is_safe(pose, body,path):
-     # Check if the position is out of bounds or collides with the snake's body
     if pose[0] <= -40 or pose[0] >= 800 or pose[1] <=-40  or pose[1] >= 600:
         return False
-    if pose in body:
-        return False
-    if pose in path:
+    if pose in body or pose in path:
         return False
     return True
 
-def shortest_path_util(head_pose,body,fruit_pose, path, cnt):
-    if head_pose==fruit_pose:
-        return True
+
+def choose_dir(fruit_pose, head_pose):
     if fruit_pose[0] < head_pose[0] and fruit_pose[1] <= head_pose[1]:
         directions=[(-40, 0),(0,-40),(40, 0),(0,40)]
     elif fruit_pose[0] < head_pose[0] and fruit_pose[1] >= head_pose[1]:
@@ -29,8 +28,13 @@ def shortest_path_util(head_pose,body,fruit_pose, path, cnt):
         directions=[(0,-40),(0,40),(-40, 0),(0,40)]
     else:
         directions=[(40, 0),(0,-40),(-40, 0),(0,40)]
+    return directions
 
 
+def shortest_path_util(head_pose,body,fruit_pose, path, cnt):
+    if head_pose==fruit_pose:
+        return True
+    directions= choose_dir(fruit_pose, head_pose)
     for dir in directions:
         new_pose=(head_pose[0]+dir[0],head_pose[1]+dir[1])
         new_body=[new_pose]+body[:-1]
@@ -60,9 +64,13 @@ def shortest_path(head_pose, body, fruit_pose):
 
 
 def show_path(path):
-    for sq in path:
+    i=0
+    color=(200,125,i)
+    for i,sq in enumerate(path):
+        i=int(i*3)
+        color=(i,0,150)
         tile= pygame.Surface((40,40))
-        tile.fill("chocolate1")
+        tile.fill(color)
         tile.set_alpha(65)
         screen.blit(tile, sq)
 
@@ -186,7 +194,7 @@ def grid():
 pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 screen_input = pygame.USEREVENT
-pygame.time.set_timer(screen_input, 200)
+pygame.time.set_timer(screen_input, 400)
 
 while True:
     # exit code
@@ -213,7 +221,11 @@ while True:
     if main_game.snake.body:
         body=[tuple(i) for i in main_game.snake.body]
         sh_path=shortest_path(body[0],body,tuple(main_game.fruit.pos))
-        #print(sh_path)
         show_path(sh_path)
+    if sh_path:
+        tile=sh_path[0]
+        head_x, head_y= body[0][0], body[0][1]
+        main_game.snake.direction= (tile[0]-head_x, tile[1]- head_y)
+
     clock.tick(60)
     pygame.display.update()
