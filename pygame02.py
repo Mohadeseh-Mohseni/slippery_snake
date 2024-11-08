@@ -5,7 +5,7 @@ import random
 from sys import exit
 
    
-
+# backtracking section
 
 def is_safe(pose, body,path):
     if pose[0] <= -40 or pose[0] >= 800 or pose[1] <=-40  or pose[1] >= 600:
@@ -13,7 +13,6 @@ def is_safe(pose, body,path):
     if pose in body or pose in path:
         return False
     return True
-
 
 def choose_dir(fruit_pose, head_pose):
     if fruit_pose[0] < head_pose[0] and fruit_pose[1] <= head_pose[1]:
@@ -29,7 +28,6 @@ def choose_dir(fruit_pose, head_pose):
     else:
         directions=[(40, 0),(0,-40),(-40, 0),(0,40)]
     return directions
-
 
 def shortest_path_util(head_pose,body,fruit_pose, path, cnt):
     if head_pose==fruit_pose:
@@ -62,7 +60,6 @@ def shortest_path(head_pose, body, fruit_pose):
 
     return best_path
 
-
 def show_path(path):
     i=0
     color=(200,125,i)
@@ -83,10 +80,11 @@ class Fruit:
         self.pos = pygame.math.Vector2(self.x, self.y)
 
     def draw_fruit(self):
-        fruit = pygame.image.load('2.png').convert_alpha()
+        fruit = pygame.image.load('C:\\Users\\Administrator\\Downloads\\2.png').convert_alpha()													
         fruit = pygame.transform.scale(fruit, (40, 40))
         fruit_rect = fruit.get_rect(topleft = self.pos)
         screen.blit(fruit, fruit_rect)
+
 class Snake:
     def __init__(self):
         self.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
@@ -97,20 +95,22 @@ class Snake:
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
-                head=pygame.image.load("open_mouth.png")
+                head=pygame.image.load("C:\\Users\\Administrator\\Downloads\\open_mouth.png")
                 head=pygame.transform.scale(head, (38, 38))
+                head= pygame.transform.flip(head, True, False)											# remember to delete
                 directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
                 head = pygame.transform.flip(head, directions[tuple(self.direction)][0], directions[tuple(self.direction)][1])
                 if tuple(self.direction)==(0, 40):
                     head=pygame.transform.rotate(head,90)
                 if tuple(self.direction)==(0, -40):
                     head=pygame.transform.rotate(head,-90)
-                head_rect = head.get_rect(topleft = block)
+                head_rect = head.get_rect(topleft = block + (1,1))
                 screen.blit(head, head_rect)
             elif i==len(self.body)-1:
-                tail=pygame.image.load("tail1.png")
+                tail=pygame.image.load("C:\\Users\\Administrator\\Downloads\\tail1.png")
+                tail= pygame.transform.flip(tail, True, False)												# remember to delete
                 tail=pygame.transform.scale(tail, (38, 38))
-                tail_rect=tail.get_rect(topleft = block)
+                tail_rect=tail.get_rect(topleft = block + (1,1))
                 last_block=tuple(self.body[i-1])
                 dx=last_block[0]-block[0]
                 dy=last_block[1]-block[1]
@@ -179,10 +179,13 @@ class MAIN:
         for block in self.snake.body[1:]:
             if block == self.snake.body[0]:
                 self.game_over()
-
+                
     def game_over(self):
-        global game_active
-        game_active= False
+        global game_state
+        game_state= 'game over'
+        
+
+
 
 
 main_game = MAIN()
@@ -200,29 +203,47 @@ pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 screen_input = pygame.USEREVENT
 pygame.time.set_timer(screen_input, 200)
-game_active= True
+game_state= 'main menu'
 score= 0
+font_1= pygame.font.SysFont('arial', 40)
+font_2= pygame.font.SysFont('arial', 70)
 
 def game_over_page():
-    font= pygame.font.SysFont('arial', 40)
+    # showing game over text
+    game_over_text= font_2.render('Game Over', False, 'Black')
+    game_over_rect= game_over_text.get_rect(midtop=(400, 150))
+    screen.blit(game_over_text, game_over_rect)
+    
+	# drawing the main_menu button
+    main_menu_text= font_1.render('Main Menu', False, 'Black')
+    main_menu_rect= main_menu_text.get_rect(midtop=(400, 400))
+    pygame.draw.rect(screen, 'darkkhaki', main_menu_rect)
+    screen.blit(main_menu_text, main_menu_rect)
+
+    #drwaing the score rect
+    score_text= font_1.render(f'Score= {score}', False, 'Black')
+    score_rect= score_text.get_rect(midtop=(400, 300))
+    pygame.draw.rect(screen, 'darkkhaki', score_rect)
+    screen.blit(score_text, score_rect)
+
+    return main_menu_rect
+    
+    
+
+def main_page():
 
     # drawing the restart button
-    restart_text= font.render('Restart', False, 'Black')
-    restart_rect= restart_text.get_rect(midtop=(400, 100))
+    start_text= font_1.render('start', False, 'Black')
+    restart_rect= start_text.get_rect(midtop=(400, 100))
     pygame.draw.rect(screen, 'darkkhaki', restart_rect)
-    screen.blit(restart_text, restart_rect)
+    screen.blit(start_text, restart_rect)
 
     #drawing the exit button
-    exit_text= font.render('Exit', False, 'Black')
+    exit_text= font_1.render('Exit', False, 'Black')
     exit_rect= exit_text.get_rect(midtop=(400, 400))
     pygame.draw.rect(screen, 'darkkhaki', exit_rect)
     screen.blit(exit_text, exit_rect)
 
-    #drwaing the score rect
-    score_text= font.render(f'Score= {score}', False, 'Black')
-    score_rect= score_text.get_rect(midtop=(400, 250))
-    pygame.draw.rect(screen, 'darkkhaki', score_rect)
-    screen.blit(score_text, score_rect)
 
     return restart_rect, exit_rect
 
@@ -233,10 +254,13 @@ while True:
             pygame.quit()
             exit()
         
-        if not game_active:
+        if game_state == 'main menu':
+            screen.fill('cadetblue2')
+            restart_rect, exit_rect= main_page()
+
             #restarting the game
             if event.type == pygame.MOUSEBUTTONDOWN and restart_rect.collidepoint(pygame.mouse.get_pos()):
-                game_active = True
+                game_state = 'in game'
                 main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
                 main_game.snake.direction = pygame.math.Vector2(-40, 0)
 
@@ -245,8 +269,9 @@ while True:
                 pygame.quit()
                 exit()
 
+
         # moving snake by taking the user input
-        if game_active:
+        elif game_state == 'in game':
             if event.type == screen_input:
                 main_game.update()
             if event.type == pygame.KEYDOWN:
@@ -270,9 +295,14 @@ while True:
                 tile=sh_path[0]
                 head_x, head_y= body[0][0], body[0][1]
                 main_game.snake.direction= (tile[0]-head_x, tile[1]- head_y)
-        else:
-            screen.fill('cadetblue2')
-            restart_rect, exit_rect= game_over_page()
+
+        elif game_state == 'game over':
+            main_menu_rect= game_over_page()
+            if event.type == pygame.MOUSEBUTTONDOWN and main_menu_rect.collidepoint(pygame.mouse.get_pos()):
+                game_state = 'main menu'
+
+        elif game_state == 'pause':
+            pass
 
     clock.tick(60)
     pygame.display.update()
