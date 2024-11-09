@@ -146,6 +146,20 @@ class Snake:
     def add_block(self):
         self.new_block = True
 
+# draw background
+def draw_bg():
+    br_grass_color = (190, 255, 153)
+    dr_grass_color = (114, 184, 73)
+    md_grass_color = (156, 247, 99)
+    grass_colors = [br_grass_color, md_grass_color, dr_grass_color]
+    for col in range(20):
+        for row in range(15):
+            grass = pygame.Surface((40, 40))
+            grass.fill(grass_colors[(col+row) % 3])
+            grass_rect = grass.get_rect(topleft=(col*40, row*40))
+            screen.blit(grass, grass_rect)
+
+
 class MAIN:
 
     def __init__(self):
@@ -272,6 +286,7 @@ while True:
 
         # moving snake by taking the user input
         elif game_state == 'in game':
+	    draw_bg()
             if event.type == screen_input:
                 main_game.update()
             if event.type == pygame.KEYDOWN:
@@ -284,7 +299,6 @@ while True:
                 if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
                     main_game.snake.direction = (-40, 0)
 
-            screen.fill("antiquewhite")
             grid()
             main_game.draw_elements()
             if main_game.snake.body:
