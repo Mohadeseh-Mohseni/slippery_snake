@@ -1,8 +1,111 @@
 import sys
-
+import math
 import pygame
 import random
+import numpy as np
+from heapq import heappop, heappush,heapify
+from itertools import combinations
 from sys import exit
+
+   
+# A* section
+class Block:
+    def __init__(self, i, j):
+        self.i = i
+        self.j = j
+        self.parent_i = -1
+        self.parent_j = -1
+        self.g = -1
+        self.h = math.inf
+        self.f = math.inf
+
+    def calculate_h(self, fruit_pos):
+        return abs(self.i- fruit_pos.i) + abs(self.j-fruit_pos.j)
+
+        
+
+
+def grid_def(body):
+    board = np.zeros((15, 20))
+    for block in body:
+        i= int(block[0]/40)
+        j= int(block[1]/40)
+        board[i, j] = 1
+        return board
+    
+
+def A_alg(body, fruit_pos, board):
+    head= Block(body[0][0]/40 , body[0][1]/40)
+    head.f= 0
+    fruit_pos= (fruit_pos[0]/40, fruit_pos[1]/40)
+    open_list=[head]
+    open_list=heapify(open_list)
+    closed_list=[]
+    identifier = True
+    grid = [[Block(i,j) for i in range(20)] for j in range(15)]
+    while open_list:
+        q= open_list.heappop(lambda item: item.f)
+        directions= [(1,0), (-1,0), (0,1), (0,-1)]
+        for dir in directions:
+            succ = Block(q.i + dir[0], q.j + dir[1])
+            if board[succ.i, succ.j] == 0 and 0<=succ.i<=19 and 0<=succ.j<=14:
+                succ.g = q.g +1
+                succ.h = succ.calculate_h()
+                succ.f = succ.g + succ.h
+                succ.parent_i = q.i
+                succ.parent_j = q.j
+                if succ.i == fruit_pos[0] and succ.j == fruit_pos[1]:
+                    grid[succ.i][succ.j]=succ
+                    return grid
+                for idx, item in enumerate(open_list):
+                    if item.i == succ.i and item.j == succ.j:
+                        if succ.f < item.f:
+                            grid[succ.i][succ.j]=succ
+                            open_list[idx]= succ
+                        else: 
+                            identifier = False
+                            break
+                for jdx, jtem in enumerate(closed_list):
+                    if not identifier:
+                        if jtem.i == succ.i and jtem.j == succ.j:
+                            if succ.f < jtem.f:
+                                grid[succ.i][succ.j]=succ
+                                closed_list[jdx]= succ
+                            else:
+                                identifier= False
+                                break
+                if identifier:
+                    grid[succ.i][succ.j]=succ
+                    open_list.heappush(succ)
+        closed_list.append(q)
+    return None
+
+def path(grid,fruit):
+    path= []
+    if grid is None:
+        print('no path')
+        return 
+    else:
+        current=grid[fruit[0]][fruit[1]]
+        while current.g != 0:
+            parent = Block(current.parent_i, current.parent_j)
+            path.append((parent.i, parent.j))
+            current=grid[parent.i][parent.j]
+        return path.reverse()
+
+def show_path(path):
+    #color=(200,125,i)
+    for i,sq in enumerate(path):
+        color=(150,10,150)
+        tile= pygame.Surface((40,40))
+        tile.fill(color)
+        tile.set_alpha(65)
+        screen.blit(tile, (sq[0],sq[1]))
+
+
+
+
+
 
 class Fruit:
     def __init__(self):
@@ -11,24 +114,55 @@ class Fruit:
         self.pos = pygame.math.Vector2(self.x, self.y)
 
     def draw_fruit(self):
-        fruit = pygame.image.load('2.png').convert_alpha()
+        fruit = pygame.image.load('2.png').convert_alpha()													
         fruit = pygame.transform.scale(fruit, (40, 40))
         fruit_rect = fruit.get_rect(topleft = self.pos)
         screen.blit(fruit, fruit_rect)
+
 class Snake:
     def __init__(self):
-        self.body = [pygame.math.Vector2(5, 10) * 40, pygame.math.Vector2(6, 10) * 40, pygame.math.Vector2(7, 10) * 40]
+        self.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
         self.direction = pygame.math.Vector2(-40, 0)
-        self.color = (185, 197, 80)
+        self.color = (0, 153, 255)
         self.new_block = False
 
     def draw_snake(self):
-        for block in self.body:
-            snake_block = pygame.Surface((40,40))
-            snake_block.fill(self.color)
-            snake_block = pygame.transform.scale(snake_block, (40, 40))
-            snake_block_rect = snake_block.get_rect(topleft = block)
-            screen.blit(snake_block, snake_block_rect)
+        for i,block in enumerate(self.body):
+            if i==0:
+                head=pygame.image.load("open_mouth.png")
+                head=pygame.transform.scale(head, (38, 38))										
+                directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
+                head = pygame.transform.flip(head, directions[tuple(self.direction)][0], directions[tuple(self.direction)][1])
+                if tuple(self.direction)==(0, 40):
+                    head=pygame.transform.rotate(head,90)
+                if tuple(self.direction)==(0, -40):
+                    head=pygame.transform.rotate(head,-90)
+                head_rect = head.get_rect(topleft = block + (1,1))
+                screen.blit(head, head_rect)
+            elif i==len(self.body)-1:
+                tail=pygame.image.load("tail1.png")
+                tail=pygame.transform.scale(tail, (38, 38))
+                tail_rect=tail.get_rect(topleft = block + (1,1))
+                last_block=tuple(self.body[i-1])
+                dx=last_block[0]-block[0]
+                dy=last_block[1]-block[1]
+                if dx:
+                    if dx>0:
+                       tail = pygame.transform.flip(tail,1,0)
+                else:
+                    if dy>0:
+                        tail=pygame.transform.rotate(tail,90) 
+                    else:
+                        tail=pygame.transform.rotate(tail,-90)
+                screen.blit(tail, tail_rect)
+            else:    
+                snake_block = pygame.Surface((40,40))
+                snake_block.fill("antiquewhite")
+                snake_block = pygame.transform.scale(snake_block, (40, 40))
+                snake_block_rect = snake_block.get_rect(topleft = block)
+                screen.blit(snake_block, snake_block_rect)
+                border_rect = snake_block_rect.inflate(-2, -2)  # Inflate to make the border smaller
+                pygame.draw.rect(screen, self.color, border_rect)
 
     def move_snake(self):
         if self.new_block:
@@ -43,11 +177,13 @@ class Snake:
 
     def add_block(self):
         self.new_block = True
+
 class MAIN:
+
     def __init__(self):
         self.snake = Snake()
         self.fruit = Fruit()
-
+       
     def update(self):
         self.snake.move_snake()
         self.collision_head()
@@ -58,29 +194,90 @@ class MAIN:
         self.fruit.draw_fruit()
 
     def collision_head(self):
+        global score
         if self.fruit.pos == self.snake.body[0]:
-            self.fruit.pos = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
+            score+=1
+            while True:
+                possible_pose = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
+                if possible_pose not in self.snake.body:
+                    break
+            self.fruit.pos=possible_pose   
             self.snake.add_block()
+            
 
     def check_game_over(self):
-        if self.snake.body[0].x < 0 or self.snake.body[0].x > 800 or self.snake.body[0].y <0 or self.snake.body[0].y > 600:
+        if self.snake.body[0].x <= -40 or self.snake.body[0].x >= 800 or self.snake.body[0].y <= -40 or self.snake.body[0].y >= 600:
             self.game_over()
         for block in self.snake.body[1:]:
             if block == self.snake.body[0]:
                 self.game_over()
-
+                
     def game_over(self):
-        pygame.quit()
-        sys.exit()
+        global game_state
+        game_state= 'game over'
+        
+
+
 
 
 main_game = MAIN()
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
+
+def grid():
+    for i in range(40,800,40):
+        pygame.draw.aaline(screen,'bisque3',(i,0),(i,600))
+    for j in range(40,600,40):
+        pygame.draw.aaline(screen,'bisque3',(0,j),(800,j))
+
+
 pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 screen_input = pygame.USEREVENT
-pygame.time.set_timer(screen_input, 500)
+pygame.time.set_timer(screen_input, 200)
+game_state= 'main menu'
+score= 0
+font_1= pygame.font.SysFont('arial', 40)
+font_2= pygame.font.SysFont('arial', 70)
+
+def game_over_page():
+    # showing game over text
+    game_over_text= font_2.render('Game Over', False, 'Black')
+    game_over_rect= game_over_text.get_rect(midtop=(400, 150))
+    screen.blit(game_over_text, game_over_rect)
+    
+	# drawing the main_menu button
+    main_menu_text= font_1.render('Main Menu', False, 'Black')
+    main_menu_rect= main_menu_text.get_rect(midtop=(400, 400))
+    pygame.draw.rect(screen, 'darkkhaki', main_menu_rect)
+    screen.blit(main_menu_text, main_menu_rect)
+
+    #drwaing the score rect
+    score_text= font_1.render(f'Score= {score}', False, 'Black')
+    score_rect= score_text.get_rect(midtop=(400, 300))
+    pygame.draw.rect(screen, 'darkkhaki', score_rect)
+    screen.blit(score_text, score_rect)
+
+    return main_menu_rect
+    
+    
+
+def main_page():
+
+    # drawing the restart button
+    start_text= font_1.render('start', False, 'Black')
+    restart_rect= start_text.get_rect(midtop=(400, 75))
+    pygame.draw.rect(screen, 'darkkhaki', restart_rect)
+    screen.blit(start_text, restart_rect)
+
+    #drawing the exit button
+    exit_text= font_1.render('Exit', False, 'Black')
+    exit_rect= exit_text.get_rect(midtop=(400, 250))
+    pygame.draw.rect(screen, 'darkkhaki', exit_rect)
+    screen.blit(exit_text, exit_rect)
+
+
+    return restart_rect, exit_rect
 
 while True:
     # exit code
@@ -88,19 +285,62 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+        
+        if game_state == 'main menu':
+            back_ground=pygame.image.load("cute_snake.jpg")
+            back_ground=fruit = pygame.transform.scale(back_ground, (800, 600))
+            back_ground_rect=back_ground.get_rect(topleft = (0,0))
+            #screen.fill('cadetblue2')
+            screen.blit(back_ground,back_ground_rect)
+            restart_rect, exit_rect= main_page()
+
+            #restarting the game
+            if event.type == pygame.MOUSEBUTTONDOWN and restart_rect.collidepoint(pygame.mouse.get_pos()):
+                game_state = 'in game'
+                main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
+                main_game.snake.direction = pygame.math.Vector2(-40, 0)
+
+            #exiting the game
+            if event.type == pygame.MOUSEBUTTONDOWN and exit_rect.collidepoint(pygame.mouse.get_pos()):
+                pygame.quit()
+                exit()
+
+
         # moving snake by taking the user input
-        if event.type == screen_input:
-            main_game.update()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP and main_game.snake.direction != (0, 40):
-                main_game.snake.direction = (0, -40)
-            if event.key == pygame.K_DOWN and main_game.snake.direction != (0, -40):
-                main_game.snake.direction = (0, 40)
-            if event.key == pygame.K_RIGHT and main_game.snake.direction != (-40, 0):
-                main_game.snake.direction = (40, 0)
-            if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
-                main_game.snake.direction = (-40, 0)
-    screen.fill((196, 62, 210))
-    main_game.draw_elements()
+        elif game_state == 'in game':
+            if event.type == screen_input:
+                main_game.update()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP and main_game.snake.direction != (0, 40):
+                    main_game.snake.direction = (0, -40)
+                if event.key == pygame.K_DOWN and main_game.snake.direction != (0, -40):
+                    main_game.snake.direction = (0, 40)
+                if event.key == pygame.K_RIGHT and main_game.snake.direction != (-40, 0):
+                    main_game.snake.direction = (40, 0)
+                if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
+                    main_game.snake.direction = (-40, 0)
+
+            screen.fill("antiquewhite")
+            grid()
+            main_game.draw_elements()
+            body=[tuple(i) for i in main_game.snake.body]
+            board= grid_def(body)
+            grid=A_alg(body, main_game.fruit.pos, board)
+            path= path(grid, main_game.fruit.pos )
+            show_path(path)
+
+            if path and event.type!= pygame.KEYDOWN:
+                tile=path[0]
+                head_x, head_y= body[0][0], body[0][1]
+                main_game.snake.direction= (tile[0]-head_x, tile[1]- head_y)
+
+        elif game_state == 'game over':
+            main_menu_rect= game_over_page()
+            if event.type == pygame.MOUSEBUTTONDOWN and main_menu_rect.collidepoint(pygame.mouse.get_pos()):
+                game_state = 'main menu'
+
+        elif game_state == 'pause':
+            pass
+
     clock.tick(60)
     pygame.display.update()
