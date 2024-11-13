@@ -22,9 +22,9 @@ def choose_dir(fruit_pose, head_pose):
     elif fruit_pose[0] > head_pose[0] and fruit_pose[1] >= head_pose[1]:
         directions=[(40, 0),(0,40),(-40, 0),(0,-40)]
     elif fruit_pose[0] == head_pose[0] and fruit_pose[1] > head_pose[1]:
-        directions=[(0,40),(0,40),(-40, 0),(0,-40)]
+        directions=[(0,40),(-40, 0),(40,0),(0,-40)]
     elif fruit_pose[0] == head_pose[0] and fruit_pose[1] < head_pose[1]:
-        directions=[(0,-40),(0,40),(-40, 0),(0,40)]
+        directions=[(0,-40),(-40,0),(40, 0),(0,40)]
     else:
         directions=[(40, 0),(0,-40),(-40, 0),(0,40)]
     return directions
@@ -40,13 +40,13 @@ def shortest_path_util(head_pose,body,fruit_pose, path, cnt):
         if is_safe(new_pose,new_body[1:],path):
             cnt+=1
             path.append(new_pose)
-            body=new_body
+            #body=new_body
             head_pose=new_pose
             if shortest_path_util(head_pose,body,fruit_pose, path, cnt):
                 return path
             cnt-=1
             path=path[:-1]
-            body=body[1:]+[tail]
+            #body=body[1:]+[tail]
 
 def shortest_path(head_pose, body, fruit_pose):
     cnt=0
@@ -80,7 +80,7 @@ class Fruit:
         self.pos = pygame.math.Vector2(self.x, self.y)
 
     def draw_fruit(self):
-        fruit = pygame.image.load('C:\\Users\\Administrator\\Downloads\\2.png').convert_alpha()													
+        fruit = pygame.image.load('2.png').convert_alpha()													
         fruit = pygame.transform.scale(fruit, (40, 40))
         fruit_rect = fruit.get_rect(topleft = self.pos)
         screen.blit(fruit, fruit_rect)
@@ -95,9 +95,8 @@ class Snake:
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
-                head=pygame.image.load("C:\\Users\\Administrator\\Downloads\\open_mouth.png")
+                head=pygame.image.load("open_mouth.png")
                 head=pygame.transform.scale(head, (38, 38))
-                head= pygame.transform.flip(head, True, False)											# remember to delete
                 directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
                 head = pygame.transform.flip(head, directions[tuple(self.direction)][0], directions[tuple(self.direction)][1])
                 if tuple(self.direction)==(0, 40):
@@ -107,8 +106,7 @@ class Snake:
                 head_rect = head.get_rect(topleft = block + (1,1))
                 screen.blit(head, head_rect)
             elif i==len(self.body)-1:
-                tail=pygame.image.load("C:\\Users\\Administrator\\Downloads\\tail1.png")
-                tail= pygame.transform.flip(tail, True, False)												# remember to delete
+                tail=pygame.image.load("tail1.png")
                 tail=pygame.transform.scale(tail, (38, 38))
                 tail_rect=tail.get_rect(topleft = block + (1,1))
                 last_block=tuple(self.body[i-1])
@@ -145,20 +143,6 @@ class Snake:
 
     def add_block(self):
         self.new_block = True
-
-# draw background
-def draw_bg():
-    br_grass_color = (190, 255, 153)
-    dr_grass_color = (114, 184, 73)
-    md_grass_color = (156, 247, 99)
-    grass_colors = [br_grass_color, md_grass_color, dr_grass_color]
-    for col in range(20):
-        for row in range(15):
-            grass = pygame.Surface((40, 40))
-            grass.fill(grass_colors[(col+row) % 3])
-            grass_rect = grass.get_rect(topleft=(col*40, row*40))
-            screen.blit(grass, grass_rect)
-
 
 class MAIN:
 
@@ -248,13 +232,13 @@ def main_page():
 
     # drawing the restart button
     start_text= font_1.render('start', False, 'Black')
-    restart_rect= start_text.get_rect(midtop=(400, 100))
+    restart_rect= start_text.get_rect(midtop=(400, 75))
     pygame.draw.rect(screen, 'darkkhaki', restart_rect)
     screen.blit(start_text, restart_rect)
 
     #drawing the exit button
     exit_text= font_1.render('Exit', False, 'Black')
-    exit_rect= exit_text.get_rect(midtop=(400, 400))
+    exit_rect= exit_text.get_rect(midtop=(400, 250))
     pygame.draw.rect(screen, 'darkkhaki', exit_rect)
     screen.blit(exit_text, exit_rect)
 
@@ -269,7 +253,10 @@ while True:
             exit()
         
         if game_state == 'main menu':
-            screen.fill('cadetblue2')
+            back_ground=pygame.image.load("cute_snake.jpg")
+            back_ground=pygame.transform.scale(back_ground, (800, 600))
+            back_ground_rect=back_ground.get_rect(topleft = (0,0))
+            screen.blit(back_ground,back_ground_rect)
             restart_rect, exit_rect= main_page()
 
             #restarting the game
@@ -286,7 +273,6 @@ while True:
 
         # moving snake by taking the user input
         elif game_state == 'in game':
-	    draw_bg()
             if event.type == screen_input:
                 main_game.update()
             if event.type == pygame.KEYDOWN:
@@ -299,6 +285,7 @@ while True:
                 if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
                     main_game.snake.direction = (-40, 0)
 
+            screen.fill("antiquewhite")
             grid()
             main_game.draw_elements()
             if main_game.snake.body:
