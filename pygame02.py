@@ -3,7 +3,7 @@ import math
 import pygame
 import random
 import numpy as np
-from heapq import heappop, heappush,heapify
+import heapq as hq
 from itertools import combinations
 from sys import exit
 
@@ -15,96 +15,88 @@ class Block:
         self.j = j
         self.parent_i = -1
         self.parent_j = -1
-        self.g = -1
+        self.g = 0
         self.h = math.inf
         self.f = math.inf
 
     def calculate_h(self, fruit_pos):
-        return abs(self.i- fruit_pos.i) + abs(self.j-fruit_pos.j)
-
-        
+        return abs(self.i- fruit_pos[0]) + abs(self.j-fruit_pos[1])
+    
+    def __lt__(self, next):
+        return self.f < next.f
 
 
 def grid_def(body):
     board = np.zeros((15, 20))
-    for block in body:
-        i= int(block[0]/40)
-        j= int(block[1]/40)
+    for block in body[1:]:
+        i= int(block[1]/40)
+        j= int(block[0]/40)
         board[i, j] = 1
-        return board
+    return board
     
 
 def A_alg(body, fruit_pos, board):
-    head= Block(body[0][0]/40 , body[0][1]/40)
+    head= Block(int(body[0][1]/40) , int(body[0][0]/40))
     head.f= 0
-    fruit_pos= (fruit_pos[0]/40, fruit_pos[1]/40)
-    open_list=[head]
-    open_list=heapify(open_list)
-    closed_list=[]
-    identifier = True
-    grid = [[Block(i,j) for i in range(20)] for j in range(15)]
+    fruit_pos= (int(fruit_pos[1]/40), int(fruit_pos[0]/40))
+
+    open_list=[]
+    hq.heappush(open_list, (head.f, head))
+    closed_list=[[False for i in range (20)] for j in range(15)]
+    grid = [[ None for i in range (20)] for j in range(15)]
+    grid[head.i][head.j]= head 
+
     while open_list:
-        q= open_list.heappop(lambda item: item.f)
+        q= hq.heappop(open_list)[1]
+        i, j= q.i, q.j
+        closed_list[i][j] = True
+
         directions= [(1,0), (-1,0), (0,1), (0,-1)]
         for dir in directions:
-            succ = Block(q.i + dir[0], q.j + dir[1])
-            if board[succ.i, succ.j] == 0 and 0<=succ.i<=19 and 0<=succ.j<=14:
-                succ.g = q.g +1
-                succ.h = succ.calculate_h()
+            succ_i, succ_j = i + dir[0] , j + dir[1]
+
+            if 0<= succ_i < 15 and 0<= succ_j <20 and not closed_list[succ_i][succ_j] and board[succ_i, succ_j] == 0:
+                succ= Block(succ_i, succ_j)
+                succ.parent_i, succ.parent_j = i, j
+                succ.g = q.g + 1
+                succ.h = succ.calculate_h(fruit_pos)
                 succ.f = succ.g + succ.h
-                succ.parent_i = q.i
-                succ.parent_j = q.j
-                if succ.i == fruit_pos[0] and succ.j == fruit_pos[1]:
-                    grid[succ.i][succ.j]=succ
+
+                if (succ_i, succ_j) == fruit_pos:
+                    grid[succ_i][succ_j] = succ
                     return grid
-                for idx, item in enumerate(open_list):
-                    if item.i == succ.i and item.j == succ.j:
-                        if succ.f < item.f:
-                            grid[succ.i][succ.j]=succ
-                            open_list[idx]= succ
-                        else: 
-                            identifier = False
-                            break
-                for jdx, jtem in enumerate(closed_list):
-                    if not identifier:
-                        if jtem.i == succ.i and jtem.j == succ.j:
-                            if succ.f < jtem.f:
-                                grid[succ.i][succ.j]=succ
-                                closed_list[jdx]= succ
-                            else:
-                                identifier= False
-                                break
-                if identifier:
-                    grid[succ.i][succ.j]=succ
-                    open_list.heappush(succ)
-        closed_list.append(q)
+                
+                else:
+                    if grid[succ_i][succ_j] == None or grid[succ_i][succ_j].f > succ.f:
+                        hq.heappush(open_list, (succ.f, succ))
+                        grid[succ_i][succ_j] = succ
+
     return None
 
-def path(grid,fruit):
+def path(grid,fruit_pos):
+    fruit_pos_x, fruit_pos_y = int(fruit_pos[1]/40), int(fruit_pos[0]/40)
     path= []
     if grid is None:
         print('no path')
-        return 
+        return []
     else:
-        current=grid[fruit[0]][fruit[1]]
+        current=grid[fruit_pos_x][fruit_pos_y]
         while current.g != 0:
-            parent = Block(current.parent_i, current.parent_j)
-            path.append((parent.i, parent.j))
-            current=grid[parent.i][parent.j]
-        return path.reverse()
+            new_i= current.parent_i
+            new_j= current.parent_j
+            path.append((new_j, new_i))
+            current=grid[new_i][new_j]
+        path.reverse()
+        path.append((fruit_pos_y, fruit_pos_x))
+        return path
 
 def show_path(path):
-    #color=(200,125,i)
     for i,sq in enumerate(path):
         color=(150,10,150)
         tile= pygame.Surface((40,40))
         tile.fill(color)
         tile.set_alpha(65)
-        screen.blit(tile, (sq[0],sq[1]))
-
-
-
-
+        screen.blit(tile, (sq[0]*40,sq[1]*40))
 
 
 class Fruit:
@@ -129,7 +121,7 @@ class Snake:
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
-                head=pygame.image.load("open_mouth.png")
+                head=pygame.image.load(open_mouth.png")
                 head=pygame.transform.scale(head, (38, 38))										
                 directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
                 head = pygame.transform.flip(head, directions[tuple(self.direction)][0], directions[tuple(self.direction)][1])
@@ -218,13 +210,11 @@ class MAIN:
         
 
 
-
-
 main_game = MAIN()
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 
-def grid():
+def game_grid():
     for i in range(40,800,40):
         pygame.draw.aaline(screen,'bisque3',(i,0),(i,600))
     for j in range(40,600,40):
@@ -259,7 +249,6 @@ def game_over_page():
     screen.blit(score_text, score_rect)
 
     return main_menu_rect
-    
     
 
 def main_page():
@@ -321,18 +310,20 @@ while True:
                     main_game.snake.direction = (-40, 0)
 
             screen.fill("antiquewhite")
-            grid()
+            game_grid()
             main_game.draw_elements()
+
+            #path finding
             body=[tuple(i) for i in main_game.snake.body]
             board= grid_def(body)
-            grid=A_alg(body, main_game.fruit.pos, board)
-            path= path(grid, main_game.fruit.pos )
-            show_path(path)
+            grid= A_alg(body, main_game.fruit.pos, board)
+            found_path= path(grid, main_game.fruit.pos )
+            show_path(found_path)
 
-            if path and event.type!= pygame.KEYDOWN:
-                tile=path[0]
+            if found_path and event.type!= pygame.KEYDOWN:
+                tile=found_path[1]
                 head_x, head_y= body[0][0], body[0][1]
-                main_game.snake.direction= (tile[0]-head_x, tile[1]- head_y)
+                main_game.snake.direction= (tile[0]*40 - head_x, tile[1]*40 - head_y)
 
         elif game_state == 'game over':
             main_menu_rect= game_over_page()
