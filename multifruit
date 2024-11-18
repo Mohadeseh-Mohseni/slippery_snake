@@ -96,13 +96,50 @@ def path(grid,fruit_pos):
         return path
 
 def show_path(path):
-    for i,sq in enumerate(path):
+    for i,sq in enumerate(path[1:]):
         color=(150,10,150)
         tile= pygame.Surface((40,40))
         tile.fill(color)
         tile.set_alpha(65)
         screen.blit(tile, (sq[0]*40,sq[1]*40))
 
+
+def go_around(body, current_dir):
+    head = body[0]
+    directions = {
+        'left': (-40, 0),
+        'right': (40, 0),
+        'up': (0, -40),
+        'down': (0, 40)
+    }
+
+    opposite_dir = {
+        (-40, 0): (40, 0),
+        (40, 0): (-40, 0),
+        (0, -40): (0, 40),
+        (0, 40): (0, -40)
+    }
+
+    valid_directions = {
+        name: dir
+        for name, dir in directions.items()
+        if dir != opposite_dir[current_dir]
+    }
+
+    free_space = {}
+    for name, dir in valid_directions.items():
+        count = 0
+        curr_x, curr_y = head
+        while 0 <= curr_x < 800 and 0 <= curr_y < 600:
+            curr_x += dir[0]
+            curr_y += dir[1]
+            if (curr_x, curr_y) in body:
+                break
+            count += 1
+        free_space[name] = count
+
+    best_direction = max(free_space, key=free_space.get)
+    return directions[best_direction]
 
 class Fruit:
     def __init__(self, chosen_fruit, score, position):
@@ -182,7 +219,7 @@ class MAIN:
     def __init__(self, fruit_scores):
         self.snake = Snake()
         self.fruit_scores = fruit_scores
-        # self.fruit_images = {"banana": "a_banana.png", "cucumber": "cucumber.png", "apple": "2.png", "grapes": "grapes.png", "mango": "mango.png", "3banana": "3banana.png", "blueberry": "blue.png", "strawberry": "strawberry.webp"}
+        # self.fruit_images = {"banana": "a_banana.png", "cucumber": "cucumber.png", "apple": "apple.png", "grapes": "grapes.png", "mango": "mango.png", "3banana": "3 bananas.png", "blueberry": "blueberry.png", "strawberry": "strawberry.webp"}
         self.fruits = []
         for i in range(3):
             chosen_fruit = random.choice(list(fruit_scores.keys()))
@@ -238,7 +275,7 @@ class MAIN:
         
 
 fruit_scores = {"a_banana": 2, "cucumber": 1, "apple": 3, "grapes": 5, "mango": 7, "3 bananas": 6,
-                             "blueberry": 8, "strawberry": 9, "pamigrant": 10, 'watermelon': 12, 'pineapple': 15, 'fig': 4}
+                             "blueberry": 8, "strawberry": 9, "pomegranate": 10, 'watermelon': 12, 'pineapple': 15, 'fig': 4}
 main_game = MAIN(fruit_scores)
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
@@ -306,7 +343,7 @@ while True:
             exit()
         
         if game_state == 'main menu':
-            back_ground = pygame.image.load("Telegram Desktop/cute_snake.jpg")
+            back_ground = pygame.image.load("cute_snake.jpg")
             back_ground = fruit = pygame.transform.scale(back_ground, (800, 600))
             back_ground_rect=back_ground.get_rect(topleft = (0,0))
             #screen.fill('cadetblue2')
@@ -354,7 +391,8 @@ while True:
                 tile=found_path[1]
                 head_x, head_y= body[0][0], body[0][1]
                 main_game.snake.direction= (tile[0]*40 - head_x, tile[1]*40 - head_y)
-
+            elif not found_path:
+                main_game.snake.direction = go_around(body, main_game.snake.direction)
         elif game_state == 'game over':
             main_menu_rect= game_over_page()
             if event.type == pygame.MOUSEBUTTONDOWN and main_menu_rect.collidepoint(pygame.mouse.get_pos()):
