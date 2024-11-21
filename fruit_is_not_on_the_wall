@@ -6,6 +6,7 @@ import numpy as np
 import heapq as hq
 from sys import exit
 
+
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption('AI powered Snake Game')
@@ -29,7 +30,6 @@ class Block:
             return self.g > next.g
         return self.f < next.f
 
-
 def grid_def(body):
     board = np.zeros((15, 20))
     for block in body[1:]:
@@ -41,7 +41,6 @@ def grid_def(body):
         board[int(b / 40), int(a / 40)] = 1
     return board
     
-
 def A_alg(body, fruit_pos, board):
     head= Block(int(body[0][1]/40) , int(body[0][0]/40))
     head.f= 0
@@ -80,7 +79,6 @@ def A_alg(body, fruit_pos, board):
 
     return None
 
-
 def path(grid,fruit_pos):
     fruit_pos_x, fruit_pos_y = int(fruit_pos[1]/40), int(fruit_pos[0]/40)
     path= []
@@ -104,6 +102,8 @@ def show_path(path):
         tile.fill(color)
         tile.set_alpha(65)
         screen.blit(tile, (sq[0]*40,sq[1]*40))
+
+
 def go_around(body, current_dir):
     head = body[0]
     directions = {
@@ -141,17 +141,19 @@ def go_around(body, current_dir):
     best_direction = max(free_space, key=free_space.get)
     return directions[best_direction]
 
+
 class Fruit:
     def __init__(self, chosen_fruit, score, position):
         self.chosen = chosen_fruit
         self.score = score
         self.pos = pygame.math.Vector2(position[0], position[1])
-        self.image = pygame.image.load(f'pics\\{self.chosen}.png').convert_alpha()
+        self.image = pygame.image.load(f'{self.chosen}.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (40,40))
 
     def draw_fruit(self):
         fruit_rect = self.image.get_rect(topleft=self.pos)
         screen.blit(self.image, fruit_rect)
+
 
 class Snake:
     def __init__(self):
@@ -163,7 +165,7 @@ class Snake:
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
-                head=pygame.image.load("pics\\open_mouth.png")
+                head=pygame.image.load("open_mouth.png")
                 head = pygame.transform.flip(head, True, False)
                 head=pygame.transform.scale(head, (38, 38))										
                 directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
@@ -175,7 +177,7 @@ class Snake:
                 head_rect = head.get_rect(topleft = block + (1,1))
                 screen.blit(head, head_rect)
             elif i==len(self.body)-1:
-                tail=pygame.image.load("pics\\tail1.png")
+                tail=pygame.image.load("tail1.png")
                 tail = pygame.transform.flip(tail, True, False)
                 tail=pygame.transform.scale(tail, (38, 38))
                 tail_rect=tail.get_rect(topleft = block + (1,1))
@@ -214,21 +216,22 @@ class Snake:
     def add_block(self):
         self.new_block = True
 
+
 class MAIN:
 
     def __init__(self, fruit_scores, wall_pos):
         self.snake = Snake()
         self.fruit_scores = fruit_scores
+        # self.fruit_images = {"banana": "a_banana.png", "cucumber": "cucumber.png", "apple": "2.png", "grapes": "grapes.png", "mango": "mango.png", "3banana": "3banana.png", "blueberry": "blue.png", "strawberry": "strawberry.webp"}
         self.fruits = []
-        self.wall_pos=wall_pos
         for i in range(3):
             chosen_fruit = random.choice(list(fruit_scores.keys()))
             score = fruit_scores[chosen_fruit]
             while True:
                 fruit_possible_pos = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
-                if fruit_possible_pos not in [tuple(block) for block in self.snake.body] :
-                    if fruit_possible_pos not in self.wall_pos:
-                        break
+                if fruit_possible_pos not in [tuple(block) for block in self.snake.body] and fruit_possible_pos not in\
+                        [wall_pos[i] for i in range(len(wall_pos))]:
+                    break
 
             self.fruits.append(Fruit(chosen_fruit, score, fruit_possible_pos))
 
@@ -243,10 +246,11 @@ class MAIN:
             fruit.draw_fruit()
 
     def collision_head(self):
-        global score
+        global score , inst_score
         for fruit in self.fruits[:]:
             if fruit.pos == self.snake.body[0]:
                 score += fruit.score
+                inst_score = (True, fruit.score, None, None)
                 self.fruits.remove(fruit)
                 while True:
                     fruits_pos = [self.fruits[self.fruits.index(fruit)].pos for fruit in self.fruits]
@@ -268,18 +272,8 @@ class MAIN:
     def check_game_over(self):
         if self.snake.body[0].x <= -40 or self.snake.body[0].x >= 800 or self.snake.body[0].y <= -40 or self.snake.body[0].y >= 600:
             self.game_over()
-        head_block = pygame.Surface((40,40))
-        head_block_rect = head_block.get_rect(topleft = self.snake.body[0])        
         for block in self.snake.body[1:]:
-            snake_block = pygame.Surface((40,40))
-            snake_block_rect = snake_block.get_rect(topleft = block)
-            if head_block_rect.colliderect(snake_block_rect) :
-                self.game_over()
-
-        for block in self.wall_pos:
-            wall_block = pygame.Surface((40,40))
-            wall_block_rect = wall_block.get_rect(topleft = block)
-            if head_block_rect.colliderect(wall_block_rect) :
+            if block == self.snake.body[0] or block in wall_pos:
                 self.game_over()
                 
     def game_over(self):
@@ -312,7 +306,7 @@ def draw_wall():
 
 def draw_walls_on_surface(wall_pos):
     for i in range(len(wall_pos)):
-        wall_image = pygame.image.load("pics\\tree.png")
+        wall_image = pygame.image.load("tree.png")
         wall_image = pygame.transform.scale(wall_image, (40, 40))
         wall_rect = wall_image.get_rect(topleft=wall_pos[i])
         screen.blit(wall_image, wall_rect)
@@ -322,10 +316,6 @@ fruit_scores = {"a_banana": 2, "cucumber": 1, "apple": 3, "grapes": 5, "mango": 
 
 wall_pos = draw_wall()
 main_game = MAIN(fruit_scores, wall_pos)
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-pygame.display.set_caption('AI powered Snake Game')
-
 
 
 def game_grid():
@@ -335,14 +325,47 @@ def game_grid():
         pygame.draw.aaline(screen,'bisque3',(0,j),(800,j))
 
 
-pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 screen_input = pygame.USEREVENT
-pygame.time.set_timer(screen_input, 200)
+pygame.time.set_timer(screen_input, 250)
+
 game_state= 'main menu'
 score= 0
+# collision occurunce, current fruit score, time passed since score appearance and current score position are saved in inst_score
+inst_score = (False, None, None, None)
+
+font_0= pygame.font.SysFont('arial', 30)
 font_1= pygame.font.SysFont('arial', 40)
 font_2= pygame.font.SysFont('arial', 70)
+font_3= pygame.font.SysFont('arial', 20)
+
+
+def display_score(score):
+    score_text= font_0.render(f'score: {score}', False, 'aquamarine4')
+    score_rect= score_text.get_rect(topleft=(5,0))
+    screen.blit(score_text, score_rect)
+
+def instant_score(score):
+    global inst_score
+    if inst_score[0]:
+        current_time = pygame.time.get_ticks()
+
+        if inst_score[2] is None:
+            head_pos= tuple(main_game.snake.body[0])
+            if head_pos[1] == 0:
+                score_pos= (head_pos[0], head_pos[1] + 40)
+            else:
+                score_pos= (head_pos[0], head_pos[1]-40)
+            inst_score = (True, inst_score[1], current_time, score_pos)
+
+        if current_time - inst_score[2] < 400:
+            instant_score_text= font_3.render(f'+{score}', False, 'Black')
+            instant_score_rect= instant_score_text.get_rect(topleft= inst_score[3])
+            screen.blit(instant_score_text, instant_score_rect)
+        else:
+            inst_score = (False, None, None, None)
+
+
 
 def game_over_page():
     # showing game over text
@@ -382,6 +405,7 @@ def main_page():
 
     return restart_rect, exit_rect
 
+
 while True:
     # exit code
     for event in pygame.event.get():
@@ -390,10 +414,9 @@ while True:
             exit()
         
         if game_state == 'main menu':
-            back_ground = pygame.image.load("pics\\cute_snake.jpg")
+            back_ground = pygame.image.load("cute_snake.jpg")
             back_ground = fruit = pygame.transform.scale(back_ground, (800, 600))
             back_ground_rect=back_ground.get_rect(topleft = (0,0))
-            #screen.fill('cadetblue2')
             screen.blit(back_ground,back_ground_rect)
             restart_rect, exit_rect= main_page()
 
@@ -427,6 +450,8 @@ while True:
             draw_walls_on_surface(wall_pos)
             game_grid()
             main_game.draw_elements()
+            display_score(score)
+            instant_score(inst_score[1])
 
             #path finding
             body=[tuple(i) for i in main_game.snake.body]
