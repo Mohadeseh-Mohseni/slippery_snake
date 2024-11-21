@@ -4,7 +4,6 @@ import pygame
 import random
 import numpy as np
 import heapq as hq
-from itertools import combinations
 from sys import exit
 
 pygame.init()
@@ -86,7 +85,6 @@ def path(grid,fruit_pos):
     fruit_pos_x, fruit_pos_y = int(fruit_pos[1]/40), int(fruit_pos[0]/40)
     path= []
     if grid is None:
-        print('no path')
         return []
     else:
         current = grid[fruit_pos_x][fruit_pos_y]
@@ -106,7 +104,42 @@ def show_path(path):
         tile.fill(color)
         tile.set_alpha(65)
         screen.blit(tile, (sq[0]*40,sq[1]*40))
+def go_around(body, current_dir):
+    head = body[0]
+    directions = {
+        'left': (-40, 0),
+        'right': (40, 0),
+        'up': (0, -40),
+        'down': (0, 40)
+    }
 
+    opposite_dir = {
+        (-40, 0): (40, 0),
+        (40, 0): (-40, 0),
+        (0, -40): (0, 40),
+        (0, 40): (0, -40)
+    }
+
+    valid_directions = {
+        name: dir
+        for name, dir in directions.items()
+        if dir != opposite_dir[current_dir]
+    }
+
+    free_space = {}
+    for name, dir in valid_directions.items():
+        count = 0
+        curr_x, curr_y = head
+        while 0 <= curr_x < 800 and 0 <= curr_y < 600:
+            curr_x += dir[0]
+            curr_y += dir[1]
+            if (curr_x, curr_y) in body:
+                break
+            count += 1
+        free_space[name] = count
+
+    best_direction = max(free_space, key=free_space.get)
+    return directions[best_direction]
 
 class Fruit:
     def __init__(self, chosen_fruit, score, position):
@@ -275,7 +308,7 @@ def draw_walls_on_surface(wall_pos):
         screen.blit(wall_image, wall_rect)
 
 fruit_scores = {"a_banana": 2, "cucumber": 1, "apple": 3, "grapes": 5, "mango": 7, "3 bananas": 6, "blueberry": 8,
-                "strawberry": 9, "pamigrant": 10, 'watermelon': 12, 'pineapple': 15, 'fig': 4}
+                "strawberry": 9, "pomegranate": 10, 'watermelon': 12, 'pineapple': 15, 'fig': 4}
 
 wall_pos = draw_wall()
 main_game = MAIN(fruit_scores, wall_pos)
@@ -388,19 +421,22 @@ while True:
             #path finding
             body=[tuple(i) for i in main_game.snake.body]
             board= grid_def(body)
-            all_path = [path(A_alg(body, fruit.pos, board), fruit.pos) if path(A_alg(body, fruit.pos, board), fruit.pos) else [1 for i in range(10000)] for fruit in main_game.fruits]
-            relative_scores = [100000 for i in range(len(main_game.fruits))]
-            relative_scores = [main_game.fruits[i].score / len(all_path[i]) for i in range(len(main_game.fruits))]
+            all_path = [path(A_alg(body, fruit.pos, board), fruit.pos)  for fruit in main_game.fruits]
+            #relative_scores = [100000 for i in range(len(main_game.fruits))]
+            relative_scores = [main_game.fruits[i].score / len(all_path[i]) if all_path[i] else -math.inf for i in range(len(main_game.fruits))]
             #best_ind = relative_scores.index(max(relative_scores))
             best_fruit = main_game.fruits[relative_scores.index(max(relative_scores))]
             grid= A_alg(body, best_fruit.pos, board)
             found_path= path(grid, best_fruit.pos)
-            show_path(found_path)
+            
 
             if found_path and event.type!= pygame.KEYDOWN:
+                show_path(found_path)
                 tile=found_path[1]
                 head_x, head_y= body[0][0], body[0][1]
                 main_game.snake.direction= (tile[0]*40 - head_x, tile[1]*40 - head_y)
+            elif not found_path:
+                main_game.snake.direction = go_around(body, main_game.snake.direction)
 
         elif game_state == 'game over':
             main_menu_rect= game_over_page()
