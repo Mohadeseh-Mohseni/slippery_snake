@@ -6,7 +6,6 @@ import numpy as np
 import heapq as hq
 from sys import exit
 
-
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption('AI powered Snake Game')
@@ -30,17 +29,20 @@ class Block:
             return self.g > next.g
         return self.f < next.f
 
+
 def grid_def(body):
     board = np.zeros((15, 20))
     for block in body[1:]:
         i= int(block[1]/40)
         j= int(block[0]/40)
         board[i, j] = 1
-    for j in range(len(wall_pos)):
-        (a, b) = wall_pos[j]
-        board[int(b / 40), int(a / 40)] = 1
+    if wall_pos:
+        for j in range(len(wall_pos)):
+            (a, b) = wall_pos[j]
+            board[int(b / 40), int(a / 40)] = 1
     return board
     
+
 def A_alg(body, fruit_pos, board):
     head= Block(int(body[0][1]/40) , int(body[0][0]/40))
     head.f= 0
@@ -79,6 +81,7 @@ def A_alg(body, fruit_pos, board):
 
     return None
 
+
 def path(grid,fruit_pos):
     fruit_pos_x, fruit_pos_y = int(fruit_pos[1]/40), int(fruit_pos[0]/40)
     path= []
@@ -96,14 +99,12 @@ def path(grid,fruit_pos):
         return path
 
 def show_path(path):
-    for i,sq in enumerate(path):
+    for i,sq in enumerate(path[1:]):
         color=(150,10,150)
         tile= pygame.Surface((40,40))
         tile.fill(color)
         tile.set_alpha(65)
         screen.blit(tile, (sq[0]*40,sq[1]*40))
-
-
 def go_around(body, current_dir):
     head = body[0]
     directions = {
@@ -141,19 +142,17 @@ def go_around(body, current_dir):
     best_direction = max(free_space, key=free_space.get)
     return directions[best_direction]
 
-
 class Fruit:
     def __init__(self, chosen_fruit, score, position):
         self.chosen = chosen_fruit
         self.score = score
         self.pos = pygame.math.Vector2(position[0], position[1])
-        self.image = pygame.image.load(f'{self.chosen}.png').convert_alpha()
+        self.image = pygame.image.load(f'pics\\{self.chosen}.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (40,40))
 
     def draw_fruit(self):
         fruit_rect = self.image.get_rect(topleft=self.pos)
         screen.blit(self.image, fruit_rect)
-
 
 class Snake:
     def __init__(self):
@@ -165,7 +164,7 @@ class Snake:
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
-                head=pygame.image.load("open_mouth.png")
+                head=pygame.image.load("pics\\open_mouth.png")
                 head = pygame.transform.flip(head, True, False)
                 head=pygame.transform.scale(head, (38, 38))										
                 directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
@@ -177,7 +176,7 @@ class Snake:
                 head_rect = head.get_rect(topleft = block + (1,1))
                 screen.blit(head, head_rect)
             elif i==len(self.body)-1:
-                tail=pygame.image.load("tail1.png")
+                tail=pygame.image.load("pics\\tail1.png")
                 tail = pygame.transform.flip(tail, True, False)
                 tail=pygame.transform.scale(tail, (38, 38))
                 tail_rect=tail.get_rect(topleft = block + (1,1))
@@ -216,22 +215,22 @@ class Snake:
     def add_block(self):
         self.new_block = True
 
-
 class MAIN:
 
-    def __init__(self, fruit_scores, wall_pos):
+    def __init__(self, fruit_scores, wall_pos=[]):
         self.snake = Snake()
         self.fruit_scores = fruit_scores
-        # self.fruit_images = {"banana": "a_banana.png", "cucumber": "cucumber.png", "apple": "2.png", "grapes": "grapes.png", "mango": "mango.png", "3banana": "3banana.png", "blueberry": "blue.png", "strawberry": "strawberry.webp"}
         self.fruits = []
-        for i in range(3):
+        self.fruit_number=1
+        self.wall_pos=wall_pos
+        for i in range(self.fruit_number):
             chosen_fruit = random.choice(list(fruit_scores.keys()))
             score = fruit_scores[chosen_fruit]
             while True:
                 fruit_possible_pos = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
-                if fruit_possible_pos not in [tuple(block) for block in self.snake.body] and fruit_possible_pos not in\
-                        [wall_pos[i] for i in range(len(wall_pos))]:
-                    break
+                if fruit_possible_pos not in [tuple(block) for block in self.snake.body] :
+                    if fruit_possible_pos not in self.wall_pos:
+                        break
 
             self.fruits.append(Fruit(chosen_fruit, score, fruit_possible_pos))
 
@@ -246,11 +245,10 @@ class MAIN:
             fruit.draw_fruit()
 
     def collision_head(self):
-        global score , inst_score
+        global score
         for fruit in self.fruits[:]:
             if fruit.pos == self.snake.body[0]:
                 score += fruit.score
-                inst_score = (True, fruit.score, None, None)
                 self.fruits.remove(fruit)
                 while True:
                     fruits_pos = [self.fruits[self.fruits.index(fruit)].pos for fruit in self.fruits]
@@ -272,8 +270,18 @@ class MAIN:
     def check_game_over(self):
         if self.snake.body[0].x <= -40 or self.snake.body[0].x >= 800 or self.snake.body[0].y <= -40 or self.snake.body[0].y >= 600:
             self.game_over()
+        head_block = pygame.Surface((40,40))
+        head_block_rect = head_block.get_rect(topleft = self.snake.body[0])        
         for block in self.snake.body[1:]:
-            if block == self.snake.body[0] or block in wall_pos:
+            snake_block = pygame.Surface((40,40))
+            snake_block_rect = snake_block.get_rect(topleft = block)
+            if head_block_rect.colliderect(snake_block_rect) :
+                self.game_over()
+
+        for block in self.wall_pos:
+            wall_block = pygame.Surface((40,40))
+            wall_block_rect = wall_block.get_rect(topleft = block)
+            if head_block_rect.colliderect(wall_block_rect) :
                 self.game_over()
                 
     def game_over(self):
@@ -286,18 +294,20 @@ def draw_wall():
     wall_pos = []
     for j in range(2):
         if h_or_v[j] == 0:
-            wall_possible_pos_x = random.randint(2, 19) * 40
-            wall_possible_pos_y = random.randint(2, 14) * 40
-            if (wall_possible_pos_x, wall_possible_pos_y) in [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]:
-                break
+            while True:
+                wall_possible_pos_x = random.randint(2, 19) * 40
+                wall_possible_pos_y = random.randint(2, 14) * 40
+                if (wall_possible_pos_x, wall_possible_pos_y) not in [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]:
+                    break
             wall_pos.append((wall_possible_pos_x, wall_possible_pos_y))
             wall_pos.append((wall_possible_pos_x - 40, wall_possible_pos_y))
             wall_pos.append((wall_possible_pos_x - 80, wall_possible_pos_y))
         if h_or_v[j] == 1:
-            wall_possible_pos_x = random.randint(2, 19) * 40
-            wall_possible_pos_y = random.randint(2, 14) * 40
-            if (wall_possible_pos_x, wall_possible_pos_y) in [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]:
-                break
+            while True:
+                wall_possible_pos_x = random.randint(2, 19) * 40
+                wall_possible_pos_y = random.randint(2, 14) * 40
+                if (wall_possible_pos_x, wall_possible_pos_y) not in [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]:
+                    break
             wall_pos.append((wall_possible_pos_x, wall_possible_pos_y))
             wall_pos.append((wall_possible_pos_x, wall_possible_pos_y - 40))
             wall_pos.append((wall_possible_pos_x, wall_possible_pos_y - 80))
@@ -305,18 +315,16 @@ def draw_wall():
 
 
 def draw_walls_on_surface(wall_pos):
+    if not wall_pos:
+        return
     for i in range(len(wall_pos)):
-        wall_image = pygame.image.load("tree.png")
+        wall_image = pygame.image.load("pics\\tree.png")
         wall_image = pygame.transform.scale(wall_image, (40, 40))
         wall_rect = wall_image.get_rect(topleft=wall_pos[i])
         screen.blit(wall_image, wall_rect)
 
 fruit_scores = {"a_banana": 2, "cucumber": 1, "apple": 3, "grapes": 5, "mango": 7, "3 bananas": 6, "blueberry": 8,
                 "strawberry": 9, "pomegranate": 10, 'watermelon': 12, 'pineapple': 15, 'fig': 4}
-
-wall_pos = draw_wall()
-main_game = MAIN(fruit_scores, wall_pos)
-
 
 def game_grid():
     for i in range(40,800,40):
@@ -325,11 +333,12 @@ def game_grid():
         pygame.draw.aaline(screen,'bisque3',(0,j),(800,j))
 
 
+pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 screen_input = pygame.USEREVENT
 pygame.time.set_timer(screen_input, 250)
-
 game_state= 'main menu'
+automation='automatic'
 score= 0
 # collision occurunce, current fruit score, time passed since score appearance and current score position are saved in inst_score
 inst_score = (False, None, None, None)
@@ -338,7 +347,6 @@ font_0= pygame.font.SysFont('arial', 30)
 font_1= pygame.font.SysFont('arial', 40)
 font_2= pygame.font.SysFont('arial', 70)
 font_3= pygame.font.SysFont('arial', 20)
-
 
 def display_score(score):
     score_text= font_0.render(f'score: {score}', False, 'aquamarine4')
@@ -365,8 +373,6 @@ def instant_score(score):
         else:
             inst_score = (False, None, None, None)
 
-
-
 def game_over_page():
     # showing game over text
     game_over_text= font_2.render('Game Over', False, 'Black')
@@ -391,21 +397,72 @@ def game_over_page():
 def main_page():
 
     # drawing the restart button
-    start_text= font_1.render('start', False, 'Black')
+    start_text= font_1.render('Start', False, 'Black')
     restart_rect= start_text.get_rect(midtop=(400, 75))
     pygame.draw.rect(screen, 'darkkhaki', restart_rect)
     screen.blit(start_text, restart_rect)
 
+    # drawing the options button
+    game_options_text= font_1.render('Game Options', False, 'Black')
+    game_options_rect= game_options_text.get_rect(midtop=(400, 175))
+    pygame.draw.rect(screen, 'darkkhaki', game_options_rect)
+    screen.blit(game_options_text, game_options_rect)
+
     #drawing the exit button
     exit_text= font_1.render('Exit', False, 'Black')
-    exit_rect= exit_text.get_rect(midtop=(400, 250))
+    exit_rect= exit_text.get_rect(midtop=(400, 275))
     pygame.draw.rect(screen, 'darkkhaki', exit_rect)
     screen.blit(exit_text, exit_rect)
 
+    return restart_rect, exit_rect, game_options_rect
 
-    return restart_rect, exit_rect
+def game_options(ch1=0,ch2=1,ch3=0):
+
+    colors=['darkgoldenrod1','darkkhaki']
+    #mono_fruit, multi_fruit
+    mono_fruit_text= font_1.render('Mono Fruit', False, 'Black')
+    mono_fruit_rect= mono_fruit_text.get_rect(midtop=(275, 50))
+    pygame.draw.rect(screen, colors[ch1], mono_fruit_rect)
+    screen.blit(mono_fruit_text, mono_fruit_rect)
+
+    multi_fruit_text= font_1.render('Multi Fruit', False, 'Black')
+    multi_fruit_rect= multi_fruit_text.get_rect(midtop=(475, 50))
+    pygame.draw.rect(screen,colors[int(1-ch1)], multi_fruit_rect)
+    screen.blit(multi_fruit_text, multi_fruit_rect)
+
+    #with_wall , without_wall
+    with_wall_text= font_1.render('With Wall', False, 'Black')
+    with_wall_rect= with_wall_text.get_rect(midtop=(275, 125))
+    pygame.draw.rect(screen, colors[ch2], with_wall_rect)
+    screen.blit(with_wall_text, with_wall_rect)
+
+    without_wall_text= font_1.render('Without Wall', False, 'Black')
+    without_wall_rect= without_wall_text.get_rect(midtop=(475, 125))
+    pygame.draw.rect(screen, colors[int(1-ch2)], without_wall_rect)
+    screen.blit(without_wall_text, without_wall_rect)
+
+    #automatic, manual
+    automatic_text= font_1.render('Automatic', False, 'Black')
+    automatic_rect= automatic_text.get_rect(midtop=(275, 200))
+    pygame.draw.rect(screen, colors[ch3], automatic_rect)
+    screen.blit(automatic_text, automatic_rect)
+
+    manual_text= font_1.render('Manual', False, 'Black')
+    manual_rect= manual_text.get_rect(midtop=(475, 200))
+    pygame.draw.rect(screen, colors[int(1-ch3)], manual_rect)
+    screen.blit(manual_text, manual_rect)
+
+    # drawing the start button
+    start_text= font_1.render('Start', False, 'Black')
+    restart_rect= start_text.get_rect(midtop=(400, 275))
+    pygame.draw.rect(screen, 'darkkhaki', restart_rect)
+    screen.blit(start_text, restart_rect)
+
+    return mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, restart_rect
 
 
+main_game=MAIN(fruit_scores)
+ch1,ch2,ch3=0,1,0
 while True:
     # exit code
     for event in pygame.event.get():
@@ -414,64 +471,108 @@ while True:
             exit()
         
         if game_state == 'main menu':
-            back_ground = pygame.image.load("cute_snake.jpg")
-            back_ground = fruit = pygame.transform.scale(back_ground, (800, 600))
+            back_ground = pygame.image.load("pics\\cute_snake.jpg")
+            back_ground = pygame.transform.scale(back_ground, (800, 600))
             back_ground_rect=back_ground.get_rect(topleft = (0,0))
             screen.blit(back_ground,back_ground_rect)
-            restart_rect, exit_rect= main_page()
+            restart_rect, exit_rect, game_options_rect= main_page()
 
             #restarting the game
             if event.type == pygame.MOUSEBUTTONDOWN and restart_rect.collidepoint(pygame.mouse.get_pos()):
                 game_state = 'in game'
                 main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
                 main_game.snake.direction = pygame.math.Vector2(-40, 0)
+            
 
             #exiting the game
             if event.type == pygame.MOUSEBUTTONDOWN and exit_rect.collidepoint(pygame.mouse.get_pos()):
                 pygame.quit()
                 exit()
 
+            #options
+            if event.type == pygame.MOUSEBUTTONDOWN and game_options_rect.collidepoint(pygame.mouse.get_pos()):
+                game_state = 'options'
+            
+        if game_state=='options':
+
+            back_ground = pygame.image.load("pics\\cute_snake.jpg")
+            back_ground = pygame.transform.scale(back_ground, (800, 600))
+            back_ground_rect=back_ground.get_rect(topleft = (0,0))
+            screen.blit(back_ground,back_ground_rect)
+
+            mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, restart_rect=game_options(ch1,ch2,ch3)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and mono_fruit_rect.collidepoint(pygame.mouse.get_pos()):
+                main_game.fruit_number=1
+                ch1=0
+            if event.type == pygame.MOUSEBUTTONDOWN and multi_fruit_rect.collidepoint(pygame.mouse.get_pos()):
+                main_game.fruit_number=3
+                ch1=1
+            if event.type == pygame.MOUSEBUTTONDOWN and with_wall_rect.collidepoint(pygame.mouse.get_pos()):
+                main_game.wall_pos = draw_wall()
+                ch2=0
+            if event.type == pygame.MOUSEBUTTONDOWN and without_wall_rect.collidepoint(pygame.mouse.get_pos()):
+                main_game.wall_pos=[]
+                ch2=1
+            if event.type == pygame.MOUSEBUTTONDOWN and automatic_rect.collidepoint(pygame.mouse.get_pos()):
+                automation='automatic'
+                ch3=0
+            if event.type == pygame.MOUSEBUTTONDOWN and manual_rect.collidepoint(pygame.mouse.get_pos()):
+                automation='manual'
+                ch3=1
+            if event.type == pygame.MOUSEBUTTONDOWN and restart_rect.collidepoint(pygame.mouse.get_pos()):
+                game_state = 'in game'
+                main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
+                main_game.snake.direction = pygame.math.Vector2(-40, 0)
+
 
         # moving snake by taking the user input
         elif game_state == 'in game':
-            if event.type == screen_input:
-                main_game.update()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP and main_game.snake.direction != (0, 40):
-                    main_game.snake.direction = (0, -40)
-                if event.key == pygame.K_DOWN and main_game.snake.direction != (0, -40):
-                    main_game.snake.direction = (0, 40)
-                if event.key == pygame.K_RIGHT and main_game.snake.direction != (-40, 0):
-                    main_game.snake.direction = (40, 0)
-                if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
-                    main_game.snake.direction = (-40, 0)
-
+            
             screen.fill("antiquewhite")
-            draw_walls_on_surface(wall_pos)
+            draw_walls_on_surface(main_game.wall_pos)
             game_grid()
             main_game.draw_elements()
+            
             display_score(score)
             instant_score(inst_score[1])
-
+            
+            wall_pos=main_game.wall_pos
             #path finding
             body=[tuple(i) for i in main_game.snake.body]
             board= grid_def(body)
             all_path = [path(A_alg(body, fruit.pos, board), fruit.pos)  for fruit in main_game.fruits]
-            #relative_scores = [100000 for i in range(len(main_game.fruits))]
+
             relative_scores = [main_game.fruits[i].score / len(all_path[i]) if all_path[i] else -math.inf for i in range(len(main_game.fruits))]
-            #best_ind = relative_scores.index(max(relative_scores))
+    
             best_fruit = main_game.fruits[relative_scores.index(max(relative_scores))]
             grid= A_alg(body, best_fruit.pos, board)
             found_path= path(grid, best_fruit.pos)
-            
-
             if found_path and event.type!= pygame.KEYDOWN:
                 show_path(found_path)
-                tile=found_path[1]
-                head_x, head_y= body[0][0], body[0][1]
-                main_game.snake.direction= (tile[0]*40 - head_x, tile[1]*40 - head_y)
-            elif not found_path:
-                main_game.snake.direction = go_around(body, main_game.snake.direction)
+            if automation=='manual':
+                if event.type == screen_input:
+                    main_game.update()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP and main_game.snake.direction != (0, 40):
+                        main_game.snake.direction = (0, -40)
+                    if event.key == pygame.K_DOWN and main_game.snake.direction != (0, -40):
+                        main_game.snake.direction = (0, 40)
+                    if event.key == pygame.K_RIGHT and main_game.snake.direction != (-40, 0):
+                        main_game.snake.direction = (40, 0)
+                    if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
+                        main_game.snake.direction = (-40, 0)
+
+            if automation=='automatic':
+                if event.type == screen_input:
+                    main_game.update()
+                if found_path :
+                    #show_path(found_path)
+                    tile=found_path[1]
+                    head_x, head_y= body[0][0], body[0][1]
+                    main_game.snake.direction= (tile[0]*40 - head_x, tile[1]*40 - head_y)
+                elif not found_path:
+                    main_game.snake.direction = go_around(body, main_game.snake.direction)
 
         elif game_state == 'game over':
             main_menu_rect= game_over_page()
