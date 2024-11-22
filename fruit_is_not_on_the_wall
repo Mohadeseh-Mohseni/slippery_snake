@@ -135,7 +135,7 @@ def go_around(body, current_dir):
         while 0 <= curr_x < 800 and 0 <= curr_y < 600:
             curr_x += dir[0]
             curr_y += dir[1]
-            if (curr_x, curr_y) in body:
+            if (curr_x, curr_y) in body or (curr_x, curr_y) in wall_pos:
                 break
             count += 1
         free_space[name] = count
@@ -273,7 +273,6 @@ class MAIN:
                 while True:
                     fruits_pos = [self.fruits[self.fruits.index(fruit)].pos for fruit in self.fruits]
                     possible_pose = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
-                    if possible_pose not in self.snake.body and possible_pose not in fruits_pos:
                         break
                 new_chosen_fruit = random.choice(list(self.fruit_scores.keys()))
                 new_fruit = Fruit(new_chosen_fruit, self.fruit_scores[new_chosen_fruit], possible_pose)
@@ -611,6 +610,7 @@ while True:
             draw_walls_on_surface(main_game.wall_pos)
             game_grid()
             main_game.draw_elements()
+            
 
             # display pause button
             pause_button= pygame.image.load('pics\\pause-button.png')
