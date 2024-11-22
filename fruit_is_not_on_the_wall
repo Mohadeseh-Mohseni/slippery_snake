@@ -105,6 +105,7 @@ def show_path(path):
         tile.fill(color)
         tile.set_alpha(65)
         screen.blit(tile, (sq[0]*40,sq[1]*40))
+
 def go_around(body, current_dir):
     head = body[0]
     directions = {
@@ -160,6 +161,7 @@ class Snake:
         self.direction = pygame.math.Vector2(-40, 0)
         self.color = (0, 153, 255)
         self.new_block = False
+
     def close_mouth(self):
         if True:
                 block=self.body[0]
@@ -174,6 +176,7 @@ class Snake:
                     head=pygame.transform.rotate(head,-90)
                 head_rect = head.get_rect(topleft = block + (1,1))
                 screen.blit(head, head_rect)
+
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
@@ -367,6 +370,20 @@ font_1= pygame.font.SysFont('arial', 40)
 font_2= pygame.font.SysFont('arial', 70)
 font_3= pygame.font.SysFont('arial', 20)
 
+def draw_background():
+    back_ground = pygame.image.load("pics\\cute_snake.jpg")
+    back_ground = pygame.transform.scale(back_ground, (800, 600))
+    back_ground_rect=back_ground.get_rect(topleft = (0,0))
+    screen.blit(back_ground,back_ground_rect)
+
+def restart_conditions():
+    global score , game_state
+    score=0
+    game_state = 'in game'
+    main_game.fruits_generation()
+    main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
+    main_game.snake.direction = pygame.math.Vector2(-40, 0)
+
 def display_score(score):
     score_text= font_0.render(f'score: {score}', False, 'aquamarine4')
     score_rect= score_text.get_rect(topleft=(5,0))
@@ -412,14 +429,13 @@ def game_over_page():
 
     return main_menu_rect
     
-
 def main_page():
 
     # drawing the restart button
     start_text= font_1.render('Start', False, 'Black')
-    restart_rect= start_text.get_rect(midtop=(400, 75))
-    pygame.draw.rect(screen, 'darkkhaki', restart_rect)
-    screen.blit(start_text, restart_rect)
+    start_rect= start_text.get_rect(midtop=(400, 75))
+    pygame.draw.rect(screen, 'darkkhaki', start_rect)
+    screen.blit(start_text, start_rect)
 
     # drawing the options button
     game_options_text= font_1.render('Game Options', False, 'Black')
@@ -433,7 +449,35 @@ def main_page():
     pygame.draw.rect(screen, 'darkkhaki', exit_rect)
     screen.blit(exit_text, exit_rect)
 
-    return restart_rect, exit_rect, game_options_rect
+    return start_rect, exit_rect, game_options_rect
+
+def pause():
+    box = pygame.Surface((240, 480))
+    box.fill('aquamarine2')
+    box_rect = box.get_rect(midtop= (400, 80))
+    screen.blit(box, box_rect)
+
+    restart_text= font_1.render('Restart', False, 'Black')
+    restart_rect= restart_text.get_rect(midtop=(400, 240))
+    pygame.draw.rect(screen, 'darkkhaki', restart_rect)
+    screen.blit(restart_text, restart_rect)
+
+    resume_text= font_1.render('Resume', False, 'Black')
+    resume_rect= resume_text.get_rect(midtop=(400, 120))
+    pygame.draw.rect(screen, 'darkkhaki', resume_rect)
+    screen.blit(resume_text, resume_rect)
+
+    menu_text= font_1.render('Main Menu', False, 'Black')
+    menu_rect= menu_text.get_rect(midtop=(400, 360))
+    pygame.draw.rect(screen, 'darkkhaki', menu_rect)
+    screen.blit(menu_text, menu_rect)
+
+    exit2_text= font_1.render('Exit', False, 'Black')
+    exit2_rect= exit2_text.get_rect(midtop=(400, 480))
+    pygame.draw.rect(screen, 'darkkhaki', exit2_rect)
+    screen.blit(exit2_text, exit2_rect)
+
+    return restart_rect, resume_rect, menu_rect, exit2_rect
 
 def game_options(ch1,ch2,ch3):
 
@@ -473,106 +517,134 @@ def game_options(ch1,ch2,ch3):
 
     # drawing the start button
     start_text= font_1.render('Start', False, 'Black')
-    restart_rect= start_text.get_rect(midtop=(400, 275))
-    pygame.draw.rect(screen, 'darkkhaki', restart_rect)
-    screen.blit(start_text, restart_rect)
+    start_rect= start_text.get_rect(midtop=(400, 275))
+    pygame.draw.rect(screen, 'darkkhaki', start_rect)
+    screen.blit(start_text, start_rect)
 
-    return mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, restart_rect
+    return mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, start_rect
 
 
 main_game=MAIN(fruit_scores)
 ch1,ch2,ch3=0,1,0
+
+
+
+
+# the game loop
 while True:
+
     # exit code
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
         
+
+        # displaying the main menu
         if game_state == 'main menu':
-            back_ground = pygame.image.load("pics\\cute_snake.jpg")
-            back_ground = pygame.transform.scale(back_ground, (800, 600))
-            back_ground_rect=back_ground.get_rect(topleft = (0,0))
-            screen.blit(back_ground,back_ground_rect)
-            restart_rect, exit_rect, game_options_rect= main_page()
 
-            #restarting the game
-            if event.type == pygame.MOUSEBUTTONDOWN and restart_rect.collidepoint(pygame.mouse.get_pos()):
-                score=0
-                game_state = 'in game'
-                main_game.fruits_generation()
-                main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
-                main_game.snake.direction = pygame.math.Vector2(-40, 0)
+            # draing the background and main menu options
+            draw_background()
+            start_rect, exit_rect, game_options_rect= main_page()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                #restarting the game
+                if start_rect.collidepoint(pygame.mouse.get_pos()):
+                    restart_conditions()
+
+                #exiting the game
+                elif exit_rect.collidepoint(pygame.mouse.get_pos()):
+                    pygame.quit()
+                    exit()
+
+                #options
+                elif game_options_rect.collidepoint(pygame.mouse.get_pos()):
+                    game_state = 'options'
             
 
-            #exiting the game
-            if event.type == pygame.MOUSEBUTTONDOWN and exit_rect.collidepoint(pygame.mouse.get_pos()):
-                pygame.quit()
-                exit()
 
-            #options
-            if event.type == pygame.MOUSEBUTTONDOWN and game_options_rect.collidepoint(pygame.mouse.get_pos()):
-                game_state = 'options'
+        # displaying the options menu
+        elif game_state =='options':
             
-        if game_state=='options':
+            #drawing the background and game options
+            draw_background()
+            mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, start_rect = game_options(ch1,ch2,ch3)
+            
+            # applying various options to the game
+            if event.type == pygame.MOUSEBUTTONDOWN:
 
-            back_ground = pygame.image.load("pics\\cute_snake.jpg")
-            back_ground = pygame.transform.scale(back_ground, (800, 600))
-            back_ground_rect=back_ground.get_rect(topleft = (0,0))
-            screen.blit(back_ground,back_ground_rect)
+                if mono_fruit_rect.collidepoint(pygame.mouse.get_pos()):
+                    main_game.fruit_number=1
+                    ch1=0
 
-            mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, restart_rect=game_options(ch1,ch2,ch3)
+                elif multi_fruit_rect.collidepoint(pygame.mouse.get_pos()):
+                    main_game.fruit_number=3
+                    ch1=1
 
-            if event.type == pygame.MOUSEBUTTONDOWN and mono_fruit_rect.collidepoint(pygame.mouse.get_pos()):
-                main_game.fruit_number=1
-                ch1=0
-            if event.type == pygame.MOUSEBUTTONDOWN and multi_fruit_rect.collidepoint(pygame.mouse.get_pos()):
-                main_game.fruit_number=3
-                ch1=1
-            if event.type == pygame.MOUSEBUTTONDOWN and with_wall_rect.collidepoint(pygame.mouse.get_pos()):
-                main_game.wall_pos = draw_wall()
-                ch2=0
-            if event.type == pygame.MOUSEBUTTONDOWN and without_wall_rect.collidepoint(pygame.mouse.get_pos()):
-                main_game.wall_pos=[]
-                ch2=1
-            if event.type == pygame.MOUSEBUTTONDOWN and automatic_rect.collidepoint(pygame.mouse.get_pos()):
-                automation='automatic'
-                ch3=0
-            if event.type == pygame.MOUSEBUTTONDOWN and manual_rect.collidepoint(pygame.mouse.get_pos()):
-                automation='manual'
-                ch3=1
-            if event.type == pygame.MOUSEBUTTONDOWN and restart_rect.collidepoint(pygame.mouse.get_pos()):
-                score=0
-                game_state = 'in game'
-                main_game.fruits_generation()
-                main_game.snake.body = [pygame.math.Vector2(5, 13) * 40, pygame.math.Vector2(6, 13) * 40, pygame.math.Vector2(7, 13) * 40]
-                main_game.snake.direction = pygame.math.Vector2(-40, 0)
+                elif with_wall_rect.collidepoint(pygame.mouse.get_pos()):
+                    main_game.wall_pos = draw_wall()
+                    ch2=0
+
+                elif without_wall_rect.collidepoint(pygame.mouse.get_pos()):
+                    main_game.wall_pos=[]
+                    ch2=1
+
+                elif automatic_rect.collidepoint(pygame.mouse.get_pos()):
+                    automation='automatic'
+                    ch3=0
+
+                elif manual_rect.collidepoint(pygame.mouse.get_pos()):
+                    automation='manual'
+                    ch3=1
+
+                elif start_rect.collidepoint(pygame.mouse.get_pos()):
+                    restart_conditions()
 
 
-        # moving snake by taking the user input
+
+        # going into the game
         elif game_state == 'in game':
             
+            # drawing game elements on the screen
             screen.fill("antiquewhite")
             draw_walls_on_surface(main_game.wall_pos)
             game_grid()
             main_game.draw_elements()
-            
+
+            # display pause button
+            pause_button= pygame.image.load('pics\\pause-button.png')
+            pause_button= pygame.transform.scale(pause_button, (40, 40))
+            pause_rect= pause_button.get_rect(topright= (800, 0))
+            screen.blit(pause_button, pause_rect)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and pause_rect.collidepoint(pygame.mouse.get_pos()):
+                game_state = 'pause'
+
+            # display total and instant scores
             display_score(score)
             instant_score(inst_score[1])
 
             wall_pos=main_game.wall_pos
+
             #path finding
+
             body=[tuple(i) for i in main_game.snake.body]
             board= grid_def(body)
-            all_path = [path(A_alg(body, fruit.pos, board), fruit.pos)  for fruit in main_game.fruits]
 
+            # finding all possible paths to all fruits and choosing the best fruit 
+            all_path = [path(A_alg(body, fruit.pos, board), fruit.pos) for fruit in main_game.fruits]
             relative_scores = [main_game.fruits[i].score / len(all_path[i]) if all_path[i] else -math.inf for i in range(len(main_game.fruits))]
-    
             best_fruit = main_game.fruits[relative_scores.index(max(relative_scores))]
-            grid= A_alg(body, best_fruit.pos, board)
-            found_path= path(grid, best_fruit.pos)
+
+            # showing the path to the best fruit
+            grid = A_alg(body, best_fruit.pos, board)
+            found_path = path(grid, best_fruit.pos)
+
             if found_path and event.type!= pygame.KEYDOWN:
                 show_path(found_path)
+
+            # settig up the manual game state    
             if automation=='manual':
                 if event.type == screen_input:
                     main_game.update()
@@ -586,9 +658,11 @@ while True:
                     if event.key == pygame.K_LEFT and main_game.snake.direction != (40, 0):
                         main_game.snake.direction = (-40, 0)
             
+            # setting up the automatic game state
             elif automation=='automatic':
                 if event.type == AUTO_MOVE_EVENT:
                     main_game.update()
+
                 if found_path :
                     if len(found_path) > 1:
                         tile=found_path[1]
@@ -599,13 +673,35 @@ while True:
                 elif not found_path:
                     main_game.snake.direction = go_around(body, main_game.snake.direction)
 
+
+
+        
+        # game over page
         elif game_state == 'game over':
             main_menu_rect= game_over_page()
             if event.type == pygame.MOUSEBUTTONDOWN and main_menu_rect.collidepoint(pygame.mouse.get_pos()):
                 game_state = 'main menu'
 
+
+
+        # pause page
         elif game_state == 'pause':
-            pass
+            restart_rect, resume_rect, menu_rect, exit2_rect = pause()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                if menu_rect.collidepoint(pygame.mouse.get_pos()): 
+                    game_state= 'main menu'
+                
+                elif restart_rect.collidepoint(pygame.mouse.get_pos()):
+                    restart_conditions()
+                
+                elif resume_rect.collidepoint(pygame.mouse.get_pos()):
+                    game_state= 'in game'
+                
+                elif exit2_rect.collidepoint(pygame.mouse.get_pos()):
+                    pygame.quit()
+                    exit()
 
     clock.tick(60)
     pygame.display.update()
