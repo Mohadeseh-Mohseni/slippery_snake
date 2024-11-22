@@ -238,6 +238,7 @@ class MAIN:
         self.wall_pos=wall_pos
 
     def fruits_generation(self):
+        self.fruits=[]
         for i in range(self.fruit_number):
             chosen_fruit = random.choice(list(fruit_scores.keys()))
             score = fruit_scores[chosen_fruit]
