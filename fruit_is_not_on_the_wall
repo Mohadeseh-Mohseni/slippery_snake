@@ -273,6 +273,7 @@ class MAIN:
                 while True:
                     fruits_pos = [self.fruits[self.fruits.index(fruit)].pos for fruit in self.fruits]
                     possible_pose = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
+                    if possible_pose not in self.snake.body and possible_pose not in fruits_pos and possible_pose not in self.wall_pos:
                         break
                 new_chosen_fruit = random.choice(list(self.fruit_scores.keys()))
                 new_fruit = Fruit(new_chosen_fruit, self.fruit_scores[new_chosen_fruit], possible_pose)
