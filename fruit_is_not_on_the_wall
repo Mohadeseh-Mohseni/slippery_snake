@@ -290,11 +290,33 @@ class MAIN:
             wall_block_rect = wall_block.get_rect(topleft = block)
             if head_block_rect.colliderect(wall_block_rect) :
                 self.game_over()
+    
+    def updating_high_scores(self):
+        with open("leader_board.txt",'w') as f:
+            f.write(str(ai_score) + '\n')
+            f.write(str(hu_score) + '\n')
                 
     def game_over(self):
-        global game_state , game_over_sound
+        global game_state , game_over_sound, ai_score, hu_score
         game_over_sound.play()
         game_state= 'game over'
+        if automation=='automatic':
+            if ai_score:
+                if score> ai_score:
+                    ai_score=score
+                    self.updating_high_scores()
+            else:
+                ai_score=score
+                self.updating_high_scores()
+        if automation=='manual':
+            if hu_score:
+                if score> hu_score:
+                    hu_score=score
+                    self.updating_high_scores()
+            else:
+                hu_score=score
+                self.updating_high_scores()
+        
         
 
 def draw_wall():
@@ -423,18 +445,29 @@ def instant_score(score):
 def game_over_page():
     # showing game over text
     game_over_text= font_2.render('Game Over', False, 'Black')
-    game_over_rect= game_over_text.get_rect(midtop=(400, 150))
+    game_over_rect= game_over_text.get_rect(midtop=(400, 50))
     screen.blit(game_over_text, game_over_rect)
     
 	# drawing the main_menu button
     main_menu_text= font_1.render('Main Menu', False, 'Black')
-    main_menu_rect= main_menu_text.get_rect(midtop=(400, 400))
+    main_menu_rect= main_menu_text.get_rect(midtop=(400, 500))
     pygame.draw.rect(screen, 'darkkhaki', main_menu_rect)
     screen.blit(main_menu_text, main_menu_rect)
 
     #drwaing the score rect
     score_text= font_1.render(f'Score= {score}', False, 'Black')
-    score_rect= score_text.get_rect(midtop=(400, 300))
+    score_rect= score_text.get_rect(midtop=(400, 400))
+    pygame.draw.rect(screen, 'darkkhaki', score_rect)
+    screen.blit(score_text, score_rect)
+
+    #drwaing the high_score rect
+    score_text= font_1.render(f'Human High Score= {hu_score}', False, 'Black')
+    score_rect= score_text.get_rect(midtop=(400, 250))
+    pygame.draw.rect(screen, 'darkkhaki', score_rect)
+    screen.blit(score_text, score_rect)
+
+    score_text= font_1.render(f'AI High Score= {ai_score}', False, 'Black')
+    score_rect= score_text.get_rect(midtop=(400, 150))
     pygame.draw.rect(screen, 'darkkhaki', score_rect)
     screen.blit(score_text, score_rect)
 
@@ -539,13 +572,20 @@ def game_options(ch1,ch2,ch3):
 main_game=MAIN(fruit_scores)
 ch1,ch2,ch3=0,1,0
 
-
+with open("leader_board.txt",'r+') as f:
+    #the first line is for ai high score and the second one is for human
+    try:
+        ai_score= int(f.readline().rstrip())
+        hu_score= int(f.readline().rstrip())
+    except:
+        ai_score=0
+        hu_score=0
 
 
 # the game loop
 while True:
 
-    main_game.snake.update_mouth()
+    
     # exit code
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -623,7 +663,9 @@ while True:
             screen.fill("antiquewhite")
             draw_walls_on_surface(main_game.wall_pos)
             game_grid()
+            main_game.snake.update_mouth()
             main_game.draw_elements()
+
 
             # display pause button
             pause_button= pygame.image.load('pics\\pause-button.png')
