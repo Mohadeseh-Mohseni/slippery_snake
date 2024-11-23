@@ -153,11 +153,10 @@ class Snake:
         self.mouth_open = False
         self.mouth_timer = pygame.time.get_ticks()
 
-    def update_mouth(self):
-       
+    def update_mouth(self):       
         if not self.mouth_open:
             curr_time = pygame.time.get_ticks()
-            if curr_time - self.mouth_timer > 400:  # 400 ms delay
+            if curr_time - self.mouth_timer > 400:
                 self.mouth_open = True 
 
     def draw_snake(self):
@@ -200,7 +199,7 @@ class Snake:
                 snake_block = pygame.transform.scale(snake_block, (40, 40))
                 snake_block_rect = snake_block.get_rect(topleft = block)
                 screen.blit(snake_block, snake_block_rect)
-                border_rect = snake_block_rect.inflate(-2, -2)  # Inflate to make the border smaller
+                border_rect = snake_block_rect.inflate(-2, -2)  
                 pygame.draw.rect(screen, self.color, border_rect)
 
     def move_snake(self):
