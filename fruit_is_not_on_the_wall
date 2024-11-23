@@ -109,28 +109,12 @@ def show_path(path):
 
 def go_around(body, current_dir):
     head = body[0]
-    directions = {
-        'left': (-40, 0),
-        'right': (40, 0),
-        'up': (0, -40),
-        'down': (0, 40)
-    }
-
-    opposite_dir = {
-        (-40, 0): (40, 0),
-        (40, 0): (-40, 0),
-        (0, -40): (0, 40),
-        (0, 40): (0, -40)
-    }
-
-    valid_directions = {
-        name: dir
-        for name, dir in directions.items()
-        if dir != opposite_dir[current_dir]
-    }
+    directions = {'left': (-40, 0), 'right': (40, 0), 'up': (0, -40), 'down': (0, 40)}
+    opposite_dir = {(-40, 0): (40, 0), (40, 0): (-40, 0), (0, -40): (0, 40), (0, 40): (0, -40)}
+    valid_dirs = {name: dir for name, dir in directions.items() if dir != opposite_dir[current_dir]}
 
     free_space = {}
-    for name, dir in valid_directions.items():
+    for name, dir in valid_dirs.items():
         count = 0
         curr_x, curr_y = head
         while 0 <= curr_x < 800 and 0 <= curr_y < 600:
@@ -162,26 +146,27 @@ class Snake:
         self.direction = pygame.math.Vector2(-40, 0)
         self.color = (0, 153, 255)
         self.new_block = False
+        self.mouth_open = True
+        self.mouth_timer = 0    
 
     def close_mouth(self):
-        if True:
-                block=self.body[0]
-                head=pygame.image.load("pics\\closed_mouth.png")
-                head = pygame.transform.flip(head, True, False)
-                head=pygame.transform.scale(head, (38, 38))										
-                directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
-                head = pygame.transform.flip(head, directions[tuple(self.direction)][0], directions[tuple(self.direction)][1])
-                if tuple(self.direction)==(0, 40):
-                    head=pygame.transform.rotate(head,90)
-                if tuple(self.direction)==(0, -40):
-                    head=pygame.transform.rotate(head,-90)
-                head_rect = head.get_rect(topleft = block + (1,1))
-                screen.blit(head, head_rect)
+        self.mouth_open = False
+        self.mouth_timer = pygame.time.get_ticks()
+
+    def update_mouth(self):
+        """Handle timing for mouth state transitions."""
+        if not self.mouth_open:
+            curr_time = pygame.time.get_ticks()
+            if curr_time - self.mouth_timer > 400:  # 400 ms delay
+                self.mouth_open = True 
 
     def draw_snake(self):
         for i,block in enumerate(self.body):
             if i==0:
-                head=pygame.image.load("pics\\open_mouth.png")
+                if self.mouth_open:
+                    head = pygame.image.load("pics\\open_mouth.png")
+                else:
+                    head = pygame.image.load("pics\\closed_mouth.png")
                 head = pygame.transform.flip(head, True, False)
                 head=pygame.transform.scale(head, (38, 38))										
                 directions={(-40, 0):(0,0),(40, 0):(1,0),(0,-40):(0,0),(0, 40):(0,0)}
@@ -248,7 +233,7 @@ class MAIN:
             score = fruit_scores[chosen_fruit]
             while True:
                 fruit_possible_pos = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
-                if fruit_possible_pos not in [tuple(block) for block in self.snake.body] and fruit_possible_pos not in self.wall_pos :
+                if fruit_possible_pos not in [tuple(block) for block in self.snake.body] and fruit_possible_pos not in self.wall_pos and fruit_possible_pos not in [fruit.pos for fruit in self.fruits]:
                     break
 
             self.fruits.append(Fruit(chosen_fruit, score, fruit_possible_pos))
@@ -264,14 +249,15 @@ class MAIN:
             fruit.draw_fruit()
 
     def collision_head(self):
-        global score, inst_score , bite_sound
+        global score, inst_score , bite_sound, col_time
         for fruit in self.fruits[:]:
             if fruit.pos == self.snake.body[0]:
-                self.snake.close_mouth()
+                col_time=pygame.time.get_ticks()
                 bite_sound.play()
                 score += fruit.score
                 self.fruits.remove(fruit)
                 inst_score = (True, fruit.score, None, None)
+                self.snake.close_mouth()
                 while True:
                     fruits_pos = [self.fruits[self.fruits.index(fruit)].pos for fruit in self.fruits]
                     possible_pose = (random.randint(0, 19) * 40, random.randint(0, 14) * 40)
@@ -356,7 +342,6 @@ def game_grid():
         pygame.draw.aaline(screen,'bisque3',(0,j),(800,j))
 
 
-pygame.display.set_caption('EX 01')
 clock = pygame.time.Clock()
 AUTO_MOVE_EVENT = pygame.USEREVENT + 1
 pygame.time.set_timer(AUTO_MOVE_EVENT, 225)
@@ -560,7 +545,7 @@ ch1,ch2,ch3=0,1,0
 
 # the game loop
 while True:
-
+    main_game.snake.update_mouth()
     # exit code
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
