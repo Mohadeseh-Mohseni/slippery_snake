@@ -154,7 +154,7 @@ class Snake:
         self.mouth_timer = pygame.time.get_ticks()
 
     def update_mouth(self):
-        """Handle timing for mouth state transitions."""
+       
         if not self.mouth_open:
             curr_time = pygame.time.get_ticks()
             if curr_time - self.mouth_timer > 400:  # 400 ms delay
@@ -545,6 +545,7 @@ ch1,ch2,ch3=0,1,0
 
 # the game loop
 while True:
+
     main_game.snake.update_mouth()
     # exit code
     for event in pygame.event.get():
