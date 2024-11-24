@@ -402,6 +402,9 @@ font_0= pygame.font.SysFont('arial', 30)
 font_1= pygame.font.SysFont('arial', 40)
 font_2= pygame.font.SysFont('arial', 70)
 font_3= pygame.font.SysFont('arial', 20)
+chose_button = pygame.image.load('pics\\chosen_button.png').convert_alpha()
+button = pygame.image.load('pics\\not_chosen_button.png').convert_alpha()
+
 
 def draw_background():
     back_ground = pygame.image.load("pics\\cute_snake.jpg")
@@ -443,126 +446,168 @@ def instant_score(score):
             inst_score = (False, None, None, None)
 
 def game_over_page():
+    global button , chose_button
     # showing game over text
     game_over_text= font_2.render('Game Over', False, 'Black')
     game_over_rect= game_over_text.get_rect(midtop=(400, 50))
     screen.blit(game_over_text, game_over_rect)
     
 	# drawing the main_menu button
+    button_menu = pygame.transform.scale(button, (200, 50))
+    button_menu_rect = button_menu.get_rect(midtop=(400, 500))
+    screen.blit(button_menu, button_menu_rect)
     main_menu_text= font_1.render('Main Menu', False, 'Black')
     main_menu_rect= main_menu_text.get_rect(midtop=(400, 500))
-    pygame.draw.rect(screen, 'darkkhaki', main_menu_rect)
     screen.blit(main_menu_text, main_menu_rect)
 
     #drwaing the score rect
+    button_score = pygame.transform.scale(button, (150, 50))
+    button_score_rect = button_score.get_rect(midtop=(400, 400))
+    screen.blit(button_score, button_score_rect)
     score_text= font_1.render(f'Score= {score}', False, 'Black')
     score_rect= score_text.get_rect(midtop=(400, 400))
-    pygame.draw.rect(screen, 'darkkhaki', score_rect)
     screen.blit(score_text, score_rect)
 
     #drwaing the high_score rect
+    button_human = pygame.transform.scale(button, (360, 50))
+    button_human_rect = button_human.get_rect(midtop=(400, 250))
+    screen.blit(button_human, button_human_rect)
     score_text= font_1.render(f'Human High Score= {hu_score}', False, 'Black')
     score_rect= score_text.get_rect(midtop=(400, 250))
-    pygame.draw.rect(screen, 'darkkhaki', score_rect)
     screen.blit(score_text, score_rect)
 
+    button_ai = pygame.transform.scale(button, (300, 50))
+    button_ai_rect = button_ai.get_rect(midtop=(400, 150))
+    screen.blit(button_ai, button_ai_rect)
     score_text= font_1.render(f'AI High Score= {ai_score}', False, 'Black')
     score_rect= score_text.get_rect(midtop=(400, 150))
-    pygame.draw.rect(screen, 'darkkhaki', score_rect)
     screen.blit(score_text, score_rect)
 
     return main_menu_rect
     
 def main_page():
-
+    global button
     # drawing the restart button
+    button_start = pygame.transform.scale(button, (90, 50))
+    button_start_rect = button_start.get_rect(midtop=(400, 75))
+    screen.blit(button_start, button_start_rect)
     start_text= font_1.render('Start', False, 'Black')
     start_rect= start_text.get_rect(midtop=(400, 75))
-    pygame.draw.rect(screen, 'darkkhaki', start_rect)
     screen.blit(start_text, start_rect)
 
     # drawing the options button
+    button_opt = pygame.transform.scale(button, (230, 50))
+    button_opt_rect = button_opt.get_rect(midtop=(400, 175))
+    screen.blit(button_opt, button_opt_rect)
     game_options_text= font_1.render('Game Options', False, 'Black')
     game_options_rect= game_options_text.get_rect(midtop=(400, 175))
-    pygame.draw.rect(screen, 'darkkhaki', game_options_rect)
     screen.blit(game_options_text, game_options_rect)
 
     #drawing the exit button
+    button_exit = pygame.transform.scale(button, (80, 50))
+    button_exit_rect = button_exit.get_rect(midtop=(400, 275))
+    screen.blit(button_exit, button_exit_rect)
     exit_text= font_1.render('Exit', False, 'Black')
     exit_rect= exit_text.get_rect(midtop=(400, 275))
-    pygame.draw.rect(screen, 'darkkhaki', exit_rect)
     screen.blit(exit_text, exit_rect)
 
     return start_rect, exit_rect, game_options_rect
 
 def pause():
+    global button
     box = pygame.Surface((240, 480))
-    box.fill('aquamarine2')
+    box.fill('cadetblue3')
     box_rect = box.get_rect(midtop= (400, 80))
     screen.blit(box, box_rect)
 
+    #restart button
+    button_res = pygame.transform.scale(button, (120, 50))
+    button_res_rect = button_res.get_rect(midtop=(400, 240))
+    screen.blit(button_res, button_res_rect)
     restart_text= font_1.render('Restart', False, 'Black')
     restart_rect= restart_text.get_rect(midtop=(400, 240))
-    pygame.draw.rect(screen, 'darkkhaki', restart_rect)
     screen.blit(restart_text, restart_rect)
 
+    #resume_button
+    button_resu = pygame.transform.scale(button, (140, 50))
+    button_resu_rect = button_resu.get_rect(midtop=(400, 120))
+    screen.blit(button_resu, button_resu_rect)
     resume_text= font_1.render('Resume', False, 'Black')
     resume_rect= resume_text.get_rect(midtop=(400, 120))
-    pygame.draw.rect(screen, 'darkkhaki', resume_rect)
     screen.blit(resume_text, resume_rect)
 
+    #main menu
+    button_main = pygame.transform.scale(button, (180, 50))
+    button_main_rect = button_main.get_rect(midtop=(400, 360))
+    screen.blit(button_main, button_main_rect)
     menu_text= font_1.render('Main Menu', False, 'Black')
     menu_rect= menu_text.get_rect(midtop=(400, 360))
-    pygame.draw.rect(screen, 'darkkhaki', menu_rect)
     screen.blit(menu_text, menu_rect)
 
+    # exit
+    button_ex = pygame.transform.scale(button, (80, 50))
+    button_ex_rect = button_ex.get_rect(midtop=(400, 480))
+    screen.blit(button_ex, button_ex_rect)
     exit2_text= font_1.render('Exit', False, 'Black')
     exit2_rect= exit2_text.get_rect(midtop=(400, 480))
-    pygame.draw.rect(screen, 'darkkhaki', exit2_rect)
     screen.blit(exit2_text, exit2_rect)
 
     return restart_rect, resume_rect, menu_rect, exit2_rect
 
 def game_options(ch1,ch2,ch3):
 
-    colors=['darkgoldenrod1','darkkhaki']
+    colors=[chose_button,button]
     #mono_fruit, multi_fruit
+    button_mono = pygame.transform.scale(colors[ch1], (190, 50))
+    button_mono_rect = button_mono.get_rect(midtop=(285, 50))
+    screen.blit(button_mono, button_mono_rect)
     mono_fruit_text= font_1.render('Mono Fruit', False, 'Black')
-    mono_fruit_rect= mono_fruit_text.get_rect(midtop=(275, 50))
-    pygame.draw.rect(screen, colors[ch1], mono_fruit_rect)
+    mono_fruit_rect= mono_fruit_text.get_rect(midtop=(285, 50))
     screen.blit(mono_fruit_text, mono_fruit_rect)
 
+    button_multi = pygame.transform.scale(colors[int(1-ch1)], (190, 50))
+    button_multi_rect = button_multi.get_rect(midtop=(485, 50))
+    screen.blit(button_multi, button_multi_rect)
     multi_fruit_text= font_1.render('Multi Fruit', False, 'Black')
-    multi_fruit_rect= multi_fruit_text.get_rect(midtop=(475, 50))
-    pygame.draw.rect(screen,colors[int(1-ch1)], multi_fruit_rect)
+    multi_fruit_rect= multi_fruit_text.get_rect(midtop=(485, 50))
     screen.blit(multi_fruit_text, multi_fruit_rect)
 
     #with_wall , without_wall
+    button_wall = pygame.transform.scale(colors[ch2], (190, 50))
+    button_wall_rect = button_wall.get_rect(midtop=(285, 125))
+    screen.blit(button_wall, button_wall_rect)
     with_wall_text= font_1.render('With Wall', False, 'Black')
-    with_wall_rect= with_wall_text.get_rect(midtop=(275, 125))
-    pygame.draw.rect(screen, colors[ch2], with_wall_rect)
+    with_wall_rect= with_wall_text.get_rect(midtop=(285, 125))
     screen.blit(with_wall_text, with_wall_rect)
 
+    button_biwall = pygame.transform.scale(colors[int(1-ch2)], (190, 50))
+    button_biwall_rect = button_biwall.get_rect(midtop=(485, 125))
+    screen.blit(button_biwall, button_biwall_rect)
     without_wall_text= font_1.render('Without Wall', False, 'Black')
-    without_wall_rect= without_wall_text.get_rect(midtop=(475, 125))
-    pygame.draw.rect(screen, colors[int(1-ch2)], without_wall_rect)
+    without_wall_rect= without_wall_text.get_rect(midtop=(485, 125))
     screen.blit(without_wall_text, without_wall_rect)
 
     #automatic, manual
+    button_aut = pygame.transform.scale(colors[ch3], (190, 50))
+    button_aut_rect = button_aut.get_rect(midtop=(285, 200))
+    screen.blit(button_aut, button_aut_rect)
     automatic_text= font_1.render('Automatic', False, 'Black')
-    automatic_rect= automatic_text.get_rect(midtop=(275, 200))
-    pygame.draw.rect(screen, colors[ch3], automatic_rect)
+    automatic_rect= automatic_text.get_rect(midtop=(285, 200))
     screen.blit(automatic_text, automatic_rect)
 
+    button_man = pygame.transform.scale(colors[int(1-ch3)], (190, 50))
+    button_man_rect = button_man.get_rect(midtop=(485, 200))
+    screen.blit(button_man, button_man_rect)
     manual_text= font_1.render('Manual', False, 'Black')
-    manual_rect= manual_text.get_rect(midtop=(475, 200))
-    pygame.draw.rect(screen, colors[int(1-ch3)], manual_rect)
+    manual_rect= manual_text.get_rect(midtop=(485, 200))
     screen.blit(manual_text, manual_rect)
 
     # drawing the start button
+    button_str = pygame.transform.scale(button, (150, 50))
+    button_str_rect = button_str.get_rect(midtop=(400, 275))
+    screen.blit(button_str, button_str_rect)
     start_text= font_1.render('Start', False, 'Black')
     start_rect= start_text.get_rect(midtop=(400, 275))
-    pygame.draw.rect(screen, 'darkkhaki', start_rect)
     screen.blit(start_text, start_rect)
 
     return mono_fruit_rect, multi_fruit_rect, with_wall_rect, without_wall_rect, automatic_rect, manual_rect, start_rect
