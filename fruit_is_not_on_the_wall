@@ -381,7 +381,8 @@ bg_music= pygame.mixer.Sound('music\\bg music.mp3')
 game_music= pygame.mixer.Sound('music\\game music.wav')
 bite_sound= pygame.mixer.Sound('music\\bite sound.mp3')
 game_over_sound= pygame.mixer.Sound('music\\game over sound.mp3')
-
+ui_click= pygame.mixer.Sound('music\\ui-click-43196.mp3')
+ui_click.set_volume(10.0)
 
 def music():
     global bg_music , game_music , bg_music_channel , game_music_channel
@@ -649,15 +650,18 @@ while True:
 
                 #restarting the game
                 if start_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     restart_conditions()
 
                 #exiting the game
                 elif exit_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     pygame.quit()
                     exit()
 
                 #options
                 elif game_options_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     game_state = 'options'
             
 
@@ -673,30 +677,37 @@ while True:
             if event.type == pygame.MOUSEBUTTONDOWN:
 
                 if mono_fruit_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     main_game.fruit_number=1
                     ch1=0
 
                 elif multi_fruit_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     main_game.fruit_number=3
                     ch1=1
 
                 elif with_wall_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     main_game.wall_pos = draw_wall()
                     ch2=0
 
                 elif without_wall_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     main_game.wall_pos=[]
                     ch2=1
 
                 elif automatic_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     automation='automatic'
                     ch3=0
 
                 elif manual_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     automation='manual'
                     ch3=1
 
                 elif start_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     restart_conditions()
 
 
@@ -719,6 +730,7 @@ while True:
             screen.blit(pause_button, pause_rect)
 
             if event.type == pygame.MOUSEBUTTONDOWN and pause_rect.collidepoint(pygame.mouse.get_pos()):
+                ui_click.play()
                 game_state = 'pause'
 
             # display total and instant scores
@@ -780,6 +792,7 @@ while True:
         elif game_state == 'game over':
             main_menu_rect= game_over_page()
             if event.type == pygame.MOUSEBUTTONDOWN and main_menu_rect.collidepoint(pygame.mouse.get_pos()):
+                ui_click.play()
                 game_state = 'main menu'
 
 
@@ -790,16 +803,20 @@ while True:
 
             if event.type == pygame.MOUSEBUTTONDOWN:
 
-                if menu_rect.collidepoint(pygame.mouse.get_pos()): 
+                if menu_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play() 
                     game_state= 'main menu'
                 
                 elif restart_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     restart_conditions()
                 
                 elif resume_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     game_state= 'in game'
                 
                 elif exit2_rect.collidepoint(pygame.mouse.get_pos()):
+                    ui_click.play()
                     pygame.quit()
                     exit()
     music()
